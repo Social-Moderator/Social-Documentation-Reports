@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Media Interaction Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Custom scrollbar for a cleaner look */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .slide-in-top {
+      animation: slideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideInTop {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-8">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-4 right-4 z-50 bg-indigo-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 slide-in-top hidden opacity-0 transition-opacity duration-300">
+    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+    <span id="toastMessage" class="font-medium"></span>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-8">
+    <!-- Header -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="message-square" class="text-indigo-600"></i>
+          Social Media Interaction Tracker
+        </h1>
+        <p class="text-slate-500 mt-1">Document and export community interactions seamlessly.</p>
+      </div>
+      <button onclick="exportCSV()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors shadow-sm font-medium">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        Export to CSV
+      </button>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Form Section -->
+      <div class="lg:col-span-5 space-y-6">
+        <form id="ticketForm" class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100">
+          <h2 class="text-xl font-semibold mb-6 flex items-center gap-2 border-b pb-4">
+            <i data-lucide="list" class="text-indigo-500"></i>
+            New Ticket Entry
+          </h2>
+          
+          <div class="space-y-5">
+            <!-- Agent Name -->
+            <div>
+              <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">
+                <i data-lucide="user" class="w-4 h-4 text-slate-400"></i> Agent Name *
+              </label>
+              <select id="agentName" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none">
+                <option value="" disabled selected>Select Name...</option>
+              </select>
+            </div>
+
+            <!-- Interaction Type & Status -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">
+                  <i data-lucide="message-square" class="w-4 h-4 text-slate-400"></i> Interaction *
+                </label>
+                <select id="interactionType" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <option value="" disabled selected>Type...</option>
+                </select>
+              </div>
+              <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">
+                  <i data-lucide="activity" class="w-4 h-4 text-slate-400"></i> Status *
+                </label>
+                <select id="status" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <option value="" disabled selected>Select Status...</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Related To -->
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1">Related To *</label>
+              <select id="relatedTo" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="" disabled selected>Select Department/Area...</option>
+              </select>
+            </div>
+
+            <!-- Request Type (Searchable Dropdown) -->
+            <div id="requestDropdownContainer" class="relative">
+              <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">
+                <i data-lucide="tag" class="w-4 h-4 text-slate-400"></i> Request Type *
+              </label>
+              <div class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-text focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all flex">
+                <input 
+                  type="text" 
+                  id="requestTypeInput" 
+                  class="w-full bg-transparent outline-none" 
+                  placeholder="Search or select request type..." 
+                  autocomplete="off"
+                  required
+                />
+              </div>
+              <div id="requestDropdownList" class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto hidden">
+                <!-- Dropdown items rendered via JS -->
+              </div>
+            </div>
+
+            <!-- Action Taken -->
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1">Action Taken *</label>
+              <select id="actionTaken" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="" disabled selected>Select Action...</option>
+              </select>
+            </div>
+
+            <!-- Links -->
+            <div class="space-y-4 pt-2 border-t">
+              <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">
+                  <i data-lucide="link" class="w-4 h-4 text-slate-400"></i> Freshchat Documentation Link
+                </label>
+                <input type="url" id="freshchatLink" placeholder="https://..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+              <div>
+                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-1">
+                  <i data-lucide="link" class="w-4 h-4 text-slate-400"></i> Post/Thread Link
+                </label>
+                <input type="url" id="postLink" placeholder="https://..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+            </div>
+
+            <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 mt-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-md">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              Save Ticket Log
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Logs Table Section -->
+      <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col h-[800px]">
+        <h2 class="text-xl font-semibold mb-6 flex items-center justify-between border-b pb-4">
+          <span id="logCountTitle">Recent Entries (0)</span>
+        </h2>
+        
+        <div id="logsContainer" class="overflow-y-auto flex-1 pr-2 -mr-2 space-y-4">
+          <!-- Logs go here -->
+          <div class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3" id="emptyState">
+            <div class="p-4 bg-slate-50 rounded-full">
+              <i data-lucide="list" class="w-10 h-10 text-slate-300"></i>
+            </div>
+            <p>No tickets logged yet today.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // --- Data Validation Lists ---
+    const NAMES = ['Lina Hashem', 'Job James', 'Ariath Piol'];
+    const RELATED_TO = ['Community Managment', 'Support General Inquiry', 'Order Support Related', 'Product Support Related'];
+    const STATUS = ['Closed', 'Pending internal action', 'Pending member action'];
+    const INTERACTION_TYPES = ['DM', 'Page comments', 'group comments', 'Twitter DM', 'Twitter public tweets', 'Reddit', 'IOS Reviews', 'Google Store reviews', 'Youtube Comment', 'Instagram Comments', 'Instagram DM'];
+    const ACTION_TAKEN = ['Motivated Member', 'Provided support From FAQ', 'Provided Support From slack Channel', 'Provided Support From SOP', 'Directed Member to contact Support', 'Directed Customer To DM', 'Feedback/sugg Raised on slack', 'Provided from Kustomer Canned response', 'Provided from Retool', 'Provided from Tempo App', 'Provided from Shopify', 'Provided from Coda'];
+    const REQUEST_TYPES = [...new Set([
+      "3PL Communications", "Accessories Cancellation", "Accessories Damaged", "Accessories Delayed", "Accessories discount promotion", "Accessories Emergent", "Accessories ETA", "Accessories Inquiry", "Accessories MFG Issue", "Accessories Missing", "Accessories Refund", "Accessories Replacement", "Accessories Return", "Accessory Tech Issue", "Account remove", "Add-On ETA", "Address Change", "Affirm Inquiry", "Apparel Store Discount", "Bestbuy", "Buy Items", "Buyout", "Churn Program", "Classes Inquiry", "Cleaning Instructions", "Coach Intro Call", "Color change", "Compensation Request", "Contact info Change", "Creating Order", "Damaged Studio", "Delayed Bundle Accessories", "Delayed Bundle Accessories cancelation", "Delayed Bundle Accessories compensation", "Delayed Bundle Accessories ETA", "Delayed Bundle Accessories Inquiry", "Discount Code", "Downgrade membership", "Edit Order", "Email Address Update", "Escalation", "Exception Request", "Expedite Shipping", "Family Invite", "Family Member Profile Deletion", "FedEx Call", "Feedback", "Finance Dept.", "Fitness Coaching", "Flowspace OB", "Free core inquiry", "Free Shirt Inquiry", "Friendbuy Advocate", "Friendbuy Reward", "General Inquiry", "Gift Code", "GiftBox Promotion", "Giveaway Order", "Gympass", "Holding Delivery", "HOLIDAY100 price match", "HOLIDAY1000 price match", "International delivery", "Leasing Cancelation", "logistics raise", "Marketing Emails Issue", "Membership Activation", "Membership cancelation", "Membership CC update", "Membership Charge Date Change", "Membership Creation", "Membership Discount", "Membership Email Change", "Membership Free Months", "Membership Inquiry", "Membership Invoice", "Membership Pause", "Membership Refund", "Membership Single Login", "Membership Upgrade", "Membeship Prepaid bundle purchase", "Mobile App", "Move Boxes", "Move Cancellation", "Move Color Change", "Move Delivery Issue", "Move Discount", "Move ETA", "Move Gift", "Move Part Replacment", "Move Recieved Damaged", "Move Refund", "Move Replacment", "Move Return", "Move Tech Issue", "My Plan Inquiry", "NPS", "Order Info", "Ownership Transfere", "Partnership", "Payment Method", "Product Specs", "Promotions", "Receipt Request", "Referral Program", "Refund", "Refurbished", "Replacement ETA", "Reset Password", "SBS", "Sending Invoice", "Shipping", "Social Team", "Stuck Plates", "Studio Cancellation", "Studio Delivery issue (Elite)", "Studio Delivery issue (XPO-RXO)", "Studio Delivery issue(Ryder)", "Studio Downgrade/Upgrade", "Studio ETA", "Studio Refund", "Studio Return", "Studio Swap ETA", "Studio Tech issue", "Survey Email", "Tempo One Inquiry", "Website Error", "WGS Issue", "Workout Recommendation", "apple watch connectivity issue", "reschedule delivery", "compatibility", "form feedback", "rep counting", "live classes", "rental", "App support", "Add/Remove Profile", "Trot Challenge", "Change Billing Info", "Music Stations Inquiry", "prospective", "unresponsive", "Fitmas Challenge", "add equipment", "garage/outdoor", "Incomplete class", "Membership Reactivation", "Safety Guide", "Delivery ETA", "Current discount", "core purchase request", "shoutout request", "buy/sell tempo", "accessories waitlist", "suggestion", "Strava", "New Year's Challenge", "delayed order", "Reset Password", "GPU Fluttering", "Apparel store exchange", "Tempo Updates", "Heart HIITERs Challenge", "Spring challenge", "Encore Classes", "feature request", "Cloud trainer feature", "Military Discount", "outdoor studio storage", "Beta Testing", "Range of motion", "5k running Challenge", "Apparel inquiry", "Can't Locate a Program", "bench address technical issue", "Chat with your coach", "Connection Issues", "Network Issues \"Buffering\"", "Can't Locate a Class", "Airpods Connectivity", "Live Classes Issues", "Weight Recommendation", "unit pickup", "Advertisements", "Live Classes Issues \"Incomplete class\"", "Folding Bench Inquiry", "Weekly Strength Set Goals", "HRM inquiry", "Squat Rack Setup", "Weight Detection", "Apple Health Sync", "Stream Classes using the App", "injury advise", "audio cue", "accessories order", "Network Issues", "Classes filteration", "Tempo Athletes Inquiry", "Squat Rack Issues", "Apple Watch Connectivity", "Macbook Compatibility", "group community-related", "Untracked exercises", "Audio Cues feature", "Misses You Tempo Messages", "Workout Mat Washable", "hdmi cable", "Heart Rate monitor different time zones", "Studio Delivery Issue", "Workout Preferences", "Back to basics challenge", "apple watch records issue", "Paused Classes/ Feedback", "Freezing Update", "Mobile App Issue", "Programs Inquiry", "Tempo Move Connectivity", "Collars Issues/Feedback", "Accessories Issue", "tempo new experience", "music issue", "Weight adjustment sugg. error", "Fitness Inquiry", "HRM Issues", "summer challenge", "PR's Page", "Follow Friend/Family", "Workout History", "Reps Info", "WIFI External Adaptor", "Can't Locate \"Paused Classes\"", "Adjusting Weight Manually", "Streaks Inquiry", "Airplay Screen Mirroring", "Moving Tempo Studio", "Leaderboard Ranking Issues", "Check mark next to the class", "Phone only workout inquiry", "Weight entry issue", "intermediate display/display", "Andriod complain", "Join multiple program", "Strava integration with Tempo app", "Fitbit integration", "Challenges feedback", "Completed program Tab", "Move: End class option after warmup", "Train here for out there challenge", "April Challenge \"360\"", "Reformer Pilate", "Adding classes to favorites", "Recommended for you feature", "Apple Watch complication", "Upgrade bundles of equipment", "Personalized Workout Creator Feature Request", "Tempo Trainer", "Calendar issue", "Live class notification issue", "Training plan inquiry", "Bring the Heat Fitness Challenge", "Weight Calibration Classes", "Progress Hub", "Live Guided Programs", "Schedule classes", "Equipment inquiry", "Musle Diagram without being in a plan", "Chatgpt 4o integration with Tempo", "Bluetooth Inquiry", "Dynamic rest", "Studio inquiry", "Website quiz", "Training plan issue", "Misaligned Class Completion Dates", "Customize a workout within Traning plan/Studio", "Classes tab Redesign", "Mirror mode", "Email issue", "Body scan Comparison feature", "Sideways screen issue", "Downloadable workout", "Summer Sculpt Challenge", "IPhone 15 core inquiry", "Calendar selection", "Remove Profiles", "Leaderboard Ranking inquiry", "Flexible Home Tab Redesign", "Eiffel Power Challenge", "Tempo challenges", "Challenge Badges", "Tempo Move inqiury", "Instagram Comments", "Android Body Scan", "Challenge pins", "Mirror mode Studio", "Mirror mode Move", "Leaderboard Groups", "Core Bundle Inquiry", "Challenge Completion email", "Reps in Reverse", "reps overcounting", "unsupported old apple watches", "unsupported 11lbs", "End of Summer challenge", "customized Tempo Apple Watch face", "Fit For Fall Challenge", "Welcome Kit", "unable to log in", "Community feature", "halloween challenge", "readiness score", "FSA/HSA", "Grateful gain challenge inquiry", "Numbers discrepency", "20 in 25 challenge pin", "Fortune cookie post", "Flex program issue", "iPhone 16e incompatible", "tempo ambassador program", "Post approvel", "Studio availability", "Andriod compatibility/support", "workout records issue", "core replacement", "Android compatability", "renewed Tempo Move", "2025 Year Recap", "extended dumbbells", "form confirmation email", "body scan issue", "delayed/ lost pin", "Postage due", "move color swap"
+    ])].sort();
+
+    // App State
+    let logs = [];
+    let toastTimeout;
+
+    // Initialize the UI elements
+    document.addEventListener("DOMContentLoaded", () => {
+      populateSelect('agentName', NAMES);
+      populateSelect('interactionType', INTERACTION_TYPES);
+      populateSelect('status', STATUS);
+      populateSelect('relatedTo', RELATED_TO);
+      populateSelect('actionTaken', ACTION_TAKEN);
+      
+      lucide.createIcons();
+    });
+
+    // Utility to populate select inputs
+    function populateSelect(elementId, dataArray) {
+      const select = document.getElementById(elementId);
+      dataArray.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        select.appendChild(option);
+      });
+    }
+
+    // Searchable Dropdown Logic
+    const requestInput = document.getElementById('requestTypeInput');
+    const dropdownList = document.getElementById('requestDropdownList');
+    const dropdownContainer = document.getElementById('requestDropdownContainer');
+
+    function renderDropdown(searchTerm = '') {
+      const filtered = REQUEST_TYPES.filter(type => type.toLowerCase().includes(searchTerm.toLowerCase()));
+      dropdownList.innerHTML = '';
+      
+      if (filtered.length > 0) {
+        filtered.forEach(type => {
+          const div = document.createElement('div');
+          div.className = 'p-2.5 hover:bg-indigo-50 cursor-pointer text-sm';
+          div.textContent = type;
+          div.onclick = () => {
+            requestInput.value = type;
+            dropdownList.classList.add('hidden');
+          };
+          dropdownList.appendChild(div);
+        });
+      } else {
+        dropdownList.innerHTML = '<div class="p-3 text-sm text-slate-500 text-center">No matches found</div>';
+      }
+    }
+
+    requestInput.addEventListener('focus', () => {
+      renderDropdown(requestInput.value);
+      dropdownList.classList.remove('hidden');
+    });
+
+    requestInput.addEventListener('input', (e) => {
+      renderDropdown(e.target.value);
+      dropdownList.classList.remove('hidden');
+    });
+
+    document.addEventListener('mousedown', (e) => {
+      if (!dropdownContainer.contains(e.target)) {
+        dropdownList.classList.add('hidden');
+      }
+    });
+
+    // Form Submission
+    document.getElementById('ticketForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const newLog = {
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleString(),
+        name: document.getElementById('agentName').value,
+        interactionType: document.getElementById('interactionType').value,
+        status: document.getElementById('status').value,
+        relatedTo: document.getElementById('relatedTo').value,
+        requestType: document.getElementById('requestTypeInput').value,
+        actionTaken: document.getElementById('actionTaken').value,
+        freshchatLink: document.getElementById('freshchatLink').value,
+        postLink: document.getElementById('postLink').value
+      };
+
+      logs.unshift(newLog);
+      renderLogs();
+      e.target.reset();
+      requestInput.value = '';
+      showToast('Ticket logged successfully!');
+    });
+
+    // Delete Log
+    window.handleDelete = function(id) {
+      logs = logs.filter(log => log.id !== id.toString());
+      renderLogs();
+      showToast('Log removed');
+    };
+
+    // Render Logs UI
+    function renderLogs() {
+      const container = document.getElementById('logsContainer');
+      const countTitle = document.getElementById('logCountTitle');
+      
+      countTitle.textContent = `Recent Entries (${logs.length})`;
+      container.innerHTML = '';
+
+      if (logs.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 fade-in">
+            <div class="p-4 bg-slate-50 rounded-full">
+              <i data-lucide="list" class="w-10 h-10 text-slate-300"></i>
+            </div>
+            <p>No tickets logged yet today.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      logs.forEach(log => {
+        const statusClass = log.status === 'Closed' ? 'bg-green-100 text-green-700' : 
+                            log.status.includes('internal') ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-orange-100 text-orange-700';
+
+        let linksHTML = '';
+        if (log.freshchatLink || log.postLink) {
+          linksHTML = `<div class="flex flex-wrap gap-3 pt-3 border-t border-slate-200">`;
+          if (log.freshchatLink) {
+            linksHTML += `
+              <button onclick="copyToClipboard('${log.freshchatLink}')" class="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded transition-colors">
+                <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i> Copy FC Link
+              </button>
+            `;
+          }
+          if (log.postLink) {
+            linksHTML += `
+              <button onclick="copyToClipboard('${log.postLink}')" class="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded transition-colors">
+                <i data-lucide="clipboard-copy" class="w-3.5 h-3.5"></i> Copy Post Link
+              </button>
+            `;
+          }
+          linksHTML += `</div>`;
+        }
+
+        const logCard = document.createElement('div');
+        logCard.className = 'p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-indigo-200 transition-colors group relative fade-in';
+        logCard.innerHTML = `
+          <button onclick="handleDelete('${log.id}')" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100" title="Delete log">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+          
+          <div class="flex items-center gap-2 mb-2">
+            <span class="font-bold text-slate-800">${log.name}</span>
+            <span class="text-xs px-2 py-1 bg-slate-200 text-slate-600 rounded-md">
+              ${log.interactionType}
+            </span>
+            <span class="text-xs px-2 py-1 rounded-md font-medium ${statusClass}">
+              ${log.status}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm text-slate-600 mb-3">
+            <div><span class="text-slate-400">Related to:</span> ${log.relatedTo}</div>
+            <div><span class="text-slate-400">Request:</span> <span class="font-medium text-slate-700">${log.requestType}</span></div>
+            <div class="sm:col-span-2"><span class="text-slate-400">Action:</span> ${log.actionTaken}</div>
+          </div>
+
+          ${linksHTML}
+          
+          <div class="mt-3 text-xs text-slate-400">
+            Logged on ${log.timestamp}
+          </div>
+        `;
+        container.appendChild(logCard);
+      });
+      
+      lucide.createIcons(); // Re-initialize icons for newly added DOM elements
+    }
+
+    // Copy to Clipboard
+    window.copyToClipboard = function(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Link copied!');
+      } catch (err) {
+        console.error('Failed to copy', err);
+      }
+      document.body.removeChild(textArea);
+    };
+
+    // Export CSV
+    window.exportCSV = function() {
+      if (logs.length === 0) {
+        showToast('No logs to export');
+        return;
+      }
+
+      const headers = [
+        'Timestamp', 'Agent Name', 'Type of interaction', 'Related To', 
+        'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post Link'
+      ];
+      
+      const csvContent = [
+        headers.join(','),
+        ...logs.map(log => [
+          `"${log.timestamp}"`,
+          `"${log.name}"`,
+          `"${log.interactionType}"`,
+          `"${log.relatedTo}"`,
+          `"${log.requestType}"`,
+          `"${log.actionTaken}"`,
+          `"${log.status}"`,
+          `"${log.freshchatLink}"`,
+          `"${log.postLink}"`
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Social_Media_Logs_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    // Toast logic
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const msgEl = document.getElementById('toastMessage');
+      
+      msgEl.textContent = message;
+      toast.classList.remove('hidden');
+      // trigger reflow
+      void toast.offsetWidth;
+      toast.classList.add('opacity-100');
+      
+      if(toastTimeout) clearTimeout(toastTimeout);
+      
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        setTimeout(() => toast.classList.add('hidden'), 300); // Wait for transition
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
