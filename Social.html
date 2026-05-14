@@ -311,7 +311,6 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            text-align: left;
         }
 
         th {
@@ -325,12 +324,14 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            text-align: left;
         }
 
         td {
             padding: 9px 12px;
             border-bottom: 1px solid var(--border-light);
             font-size: 12px;
+            text-align: left;
         }
 
         tbody tr:hover {
@@ -407,10 +408,28 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         .filter-modal.active { display: flex; }
+        
+        /* Advanced Filter Multi-Select Custom Dropdowns */
+        .multi-select-wrapper { position: relative; width: 100%; }
+        .ms-header {
+            padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-light);
+            font-size: 13px; background: var(--bg-main); color: var(--text-main);
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        }
+        .ms-header::after { content: "▼"; font-size: 10px; color: var(--text-muted); }
+        .ms-dropdown {
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: var(--bg-main); border: 1px solid var(--border-light);
+            border-radius: 8px; margin-top: 4px; z-index: 1000;
+            display: none; flex-direction: column; padding: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .ms-dropdown.active { display: flex; }
+        .ms-search { margin-bottom: 8px; }
+
         .checkbox-list { 
-            max-height: 120px; overflow-y: auto; border: 1px solid var(--border-light); 
-            border-radius: 8px; padding: 8px; background: var(--bg-main); display: flex; 
-            flex-direction: column; gap: 6px; 
+            max-height: 160px; overflow-y: auto; background: var(--bg-main); display: flex; 
+            flex-direction: column; gap: 6px; border: none; padding: 0; margin: 0;
         }
         .checkbox-item { 
             display: flex; align-items: center; gap: 8px; font-size: 12px; 
@@ -516,9 +535,13 @@
 
         .da-section { background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 24px; overflow-x: auto; overflow-y: hidden; }
         .da-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .da-table th { background: var(--bg-main); padding: 10px 16px; border-bottom: 1px solid var(--border-light); text-transform: uppercase; font-size: 10px; color: var(--text-muted); }
+        
+        /* Analysis Tables Alignment */
+        .da-table th { background: var(--bg-main); padding: 10px 16px; border-bottom: 1px solid var(--border-light); text-transform: uppercase; font-size: 10px; color: var(--text-muted); text-align: center; }
+        .da-table th:first-child { text-align: left; font-weight: 500; }
         .da-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); text-align: center; }
         .da-table td:first-child { text-align: left; font-weight: 500; }
+        
         .da-table tr.total-row { font-weight: bold; }
         .da-table tr:hover { background-color: var(--bg-hover); }
 
@@ -544,7 +567,7 @@
         .tab.active { color: var(--purple-main); border-bottom-color: var(--purple-main); font-weight: 500; }
 
         .list-table { width: 100%; border-collapse: collapse; }
-        .list-table td { padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+        .list-table td { padding: 8px 0; border-bottom: 1px solid var(--border-light); text-align: left; }
         .list-table td:last-child { text-align: right; }
     </style>
 </head>
@@ -582,18 +605,15 @@
             <!-- PAGE 1: FB/IG CASES -->
             <div id="page-fbig" class="page-view active">
                 <div class="top-bar">
-                    <div class="page-title"><h1>FB/IG Cases</h1><span class="entry-count">· 0 entries</span></div>
+                    <div class="page-title"><h1>FB/IG Cases</h1></div>
                     <div class="actions">
                         <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
-                        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-import-trigger" data-type="fbig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Import</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
                         <button class="btn btn-purple btn-new-entry" data-type="fbig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New Entry</button>
                     </div>
                 </div>
                 <div class="filter-bar">
-                    <div class="search-container">
-                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <input type="text" class="search-input table-search" placeholder="Search by name or type…">
-                    </div>
                     <div class="filter-chips">
                         <div class="chip active" data-filter="All">All</div>
                         <div class="chip" data-filter="DM">DM</div>
@@ -611,25 +631,22 @@
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 entries · 0 closed · 0 pending internal · 0 pending member</span>
+                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
                 </div>
             </div>
 
             <!-- PAGE 2: REDDIT CASES -->
             <div id="page-reddit" class="page-view">
                 <div class="top-bar">
-                    <div class="page-title"><h1>Reddit Cases</h1><span class="entry-count">· 0 entries</span></div>
+                    <div class="page-title"><h1>Reddit Cases</h1></div>
                     <div class="actions">
                         <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
-                        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-import-trigger" data-type="reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Import</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
                         <button class="btn btn-purple btn-new-entry" data-type="reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New Entry</button>
                     </div>
                 </div>
                 <div class="filter-bar">
-                    <div class="search-container">
-                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <input type="text" class="search-input table-search" placeholder="Search by name…">
-                    </div>
                     <div class="filter-chips">
                         <div class="chip active" data-filter="All">All</div>
                         <div class="chip" data-filter="Community Management">Community Mgmt</div>
@@ -646,43 +663,38 @@
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 entries · 0 closed · 0 pending internal · 0 pending member</span>
+                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
                 </div>
             </div>
 
             <!-- PAGE 3: REVIEW CASES -->
             <div id="page-review" class="page-view">
                 <div class="top-bar">
-                    <div class="page-title"><h1>Review Cases</h1><span class="entry-count">· 0 entries</span></div>
+                    <div class="page-title"><h1>Review Cases</h1></div>
                     <div class="actions">
                         <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
-                        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-import-trigger" data-type="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Import</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
                         <button class="btn btn-purple btn-new-entry" data-type="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New Entry</button>
                     </div>
                 </div>
                 <div class="filter-bar">
-                    <div class="search-container">
-                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <input type="text" class="search-input table-search" placeholder="Search by name…">
-                    </div>
                     <div class="filter-chips">
                         <div class="chip active" data-filter="All">All</div>
                         <div class="chip" data-filter="Google Review">Google Review</div>
                         <div class="chip" data-filter="iOS Review">iOS Review</div>
-                        <div class="chip" data-filter="Positive">Positive</div>
-                        <div class="chip" data-filter="Negative">Negative</div>
                     </div>
                 </div>
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Type</th><th>Sentiment</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 entries · 0 closed · 0 pending internal · 0 pending member</span>
+                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
                 </div>
             </div>
 
@@ -692,13 +704,7 @@
                     <div class="page-title"><h1>All Pending Cases</h1><span class="entry-count">· 0 entries</span></div>
                     <div class="actions">
                         <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
-                        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
-                    </div>
-                </div>
-                <div class="filter-bar">
-                    <div class="search-container">
-                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                        <input type="text" class="search-input table-search" placeholder="Search by name…">
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
                     </div>
                 </div>
                 <div class="table-container">
@@ -722,7 +728,7 @@
                         <button class="btn btn-icon" id="btn-wk-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
                         <span id="wk-range-label" style="font-weight: 500;">Mar 30 – May 4</span>
                         <button class="btn btn-icon" id="btn-wk-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-                        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
                     </div>
                 </div>
                 <div class="da-container">
@@ -743,7 +749,7 @@
                         <button class="btn btn-icon" id="btn-mo-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
                         <span id="mo-range-label" style="font-weight: 500;">April 2026</span>
                         <button class="btn btn-icon" id="btn-mo-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-                        <button class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
                     </div>
                 </div>
                 <div class="tabs">
@@ -751,6 +757,7 @@
                     <div class="tab" data-tab="fb">Facebook</div>
                     <div class="tab" data-tab="ig">Instagram</div>
                     <div class="tab" data-tab="reddit">Reddit</div>
+                    <div class="tab" data-tab="review">Reviews</div>
                 </div>
                 <div class="da-container" id="mo-container">
                     <!-- Populated by JS -->
@@ -881,32 +888,92 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Agent Name</label>
-                            <div class="checkbox-list" id="adv-agents"></div>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select agents...">Select agents...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search agents...">
+                                    <div class="checkbox-list" id="adv-agents"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Status</label>
-                            <div class="checkbox-list" id="adv-statuses"></div>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select statuses...">Select statuses...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search statuses...">
+                                    <div class="checkbox-list" id="adv-statuses"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Related To</label>
-                            <div class="checkbox-list" id="adv-related"></div>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select related to...">Select related to...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search related to...">
+                                    <div class="checkbox-list" id="adv-related"></div>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Action Taken</label>
-                            <div class="checkbox-list" id="adv-actions"></div>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select actions...">Select actions...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search actions...">
+                                    <div class="checkbox-list" id="adv-actions"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="adv-req-group">
                         <label>Request Type <span style="font-weight:normal;color:var(--text-muted);text-transform:none;">(Search to filter list)</span></label>
-                        <input type="text" class="form-control" id="adv-req-search" placeholder="Type to filter..." style="margin-bottom:6px;">
-                        <div class="checkbox-list" id="adv-reqs" style="max-height:160px;"></div>
+                        <div class="multi-select-wrapper">
+                            <div class="ms-header" data-placeholder="Select request types...">Select request types...</div>
+                            <div class="ms-dropdown">
+                                <input type="text" class="form-control ms-search" placeholder="Search request types...">
+                                <div class="checkbox-list" id="adv-reqs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="adv-sentiment-group" style="display:none;">
+                        <label>Sentiment</label>
+                        <div class="multi-select-wrapper">
+                            <div class="ms-header" data-placeholder="Select sentiments...">Select sentiments...</div>
+                            <div class="ms-dropdown">
+                                <div class="checkbox-list" id="adv-sentiments"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="panel-footer">
                     <button class="btn" id="btn-clear-adv">Clear All</button>
                     <button class="btn btn-purple" id="btn-apply-adv">Apply Filters</button>
+                </div>
+            </div>
+
+            <!-- Import Data Modal -->
+            <div class="delete-modal" id="import-modal" style="width: 500px; text-align: left; padding: 20px;">
+                <div class="panel-header" style="padding:0; border:none; margin-bottom:16px;">
+                    <h3 style="margin: 0; font-size: 16px;">Import Data</h3>
+                    <button class="btn-close" id="btn-close-import" style="width: 24px; height: 24px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Expected column order:</p>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 11px; color: var(--text-muted); font-weight: 500;">YEAR:</label>
+                        <select id="import-year" class="form-control" style="width: 80px; padding: 4px 8px; font-size: 12px;"></select>
+                    </div>
+                </div>
+                <textarea id="import-textarea" class="form-control" style="height: 150px; margin-bottom: 16px; font-family: monospace; white-space: pre; overflow: auto; resize: vertical;" placeholder="Name&#9;Related to&#9;Action Taken&#9;Reference link&#9;Post/thread Link&#9;Fresh desk Link&#9;Date&#9;Status&#9;type of interaction&#9;Request type"></textarea>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn" id="btn-cancel-import">Cancel</button>
+                    <button class="btn btn-purple" id="btn-confirm-import">Import Data</button>
                 </div>
             </div>
 
@@ -1017,7 +1084,8 @@
                     { id: 3, date: '2026-05-08', agent: 'Job James', related: 'Support General Inquiry', req: 'Feedback', action: 'Feedback/Sugg Raised on Slack', status: 'Pending member action', links: {post:'#'} }
                 ],
                 review: [
-                    { id: 4, date: '2026-05-07', agent: 'Lina Hashem', type: 'Google Review', sentiment: 'Negative', req: 'App support', action: 'Motivated Member', status: 'Closed', links: {ref:'#'} }
+                    { id: 4, date: '2026-05-07', agent: 'Lina Hashem', type: 'Google Review', sentiment: 'Negative', req: 'App support', action: 'Motivated Member', status: 'Closed', links: {ref:'#'} },
+                    { id: 5, date: '2026-05-12', agent: 'Ariath Piol', type: 'iOS Review', sentiment: 'Positive', req: 'App support', action: 'Motivated Member', status: 'Closed', links: {ref:'#'} }
                 ]
             },
             
@@ -1026,9 +1094,10 @@
             newEntrySentiment: 'Positive',
             editingId: null,
             editingKey: null,
+            importTarget: null,
             
             advFilters: {
-                startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: []
+                startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [], sentiments: []
             },
             
             viewState: {
@@ -1059,6 +1128,18 @@
             
             setupDateControlListeners();
 
+            // Export listeners
+            document.querySelectorAll('.btn-export').forEach(btn => btn.addEventListener('click', handleExport));
+
+            // Populate Import Year Options
+            const currentYear = new Date().getFullYear();
+            const yearSelect = document.getElementById('import-year');
+            if (yearSelect) {
+                for(let y = currentYear - 2; y <= currentYear + 2; y++) {
+                    yearSelect.innerHTML += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+                }
+            }
+
             // Default select FB/IG
             document.querySelector('[data-target="page-fbig"]').click();
             // Pre-fill date
@@ -1085,6 +1166,13 @@
             });
             // Init Chart colors globally
             Chart.defaults.color = '#888888';
+            
+            // Close MS Dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('.multi-select-wrapper')) {
+                    document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
+                }
+            });
         }
 
         function setupAutocomplete(inputId, listId, dataArrayKey) {
@@ -1173,6 +1261,7 @@
             document.getElementById('adv-related').innerHTML = state.relatedTo.map(v => createCb(v, 'relatedTo')).join('');
             document.getElementById('adv-actions').innerHTML = state.actions.map(v => createCb(v, 'actions')).join('');
             document.getElementById('adv-statuses').innerHTML = state.statuses.map(v => createCb(v, 'statuses')).join('');
+            document.getElementById('adv-sentiments').innerHTML = ['Positive', 'Negative'].map(v => createCb(v, 'sentiments')).join('');
             
             const renderAdvReqs = (filterTxt = '') => {
                 const arr = filterTxt ? state.requestTypes.filter(r => r.toLowerCase().includes(filterTxt.toLowerCase())) : state.requestTypes;
@@ -1184,7 +1273,55 @@
             };
             
             renderAdvReqs();
-            document.getElementById('adv-req-search').addEventListener('input', e => renderAdvReqs(e.target.value));
+            
+            // Restore checked state for other inputs based on state.advFilters
+            ['agents', 'relatedTo', 'actions', 'statuses', 'sentiments'].forEach(key => {
+                document.querySelectorAll(`#adv-${key} input`).forEach(inp => {
+                    if (state.advFilters[key].includes(inp.value)) inp.checked = true;
+                });
+            });
+
+            // Initialize multi-select behaviors
+            document.querySelectorAll('.multi-select-wrapper').forEach(wrapper => {
+                const header = wrapper.querySelector('.ms-header');
+                const dropdown = wrapper.querySelector('.ms-dropdown');
+                const search = wrapper.querySelector('.ms-search');
+                const list = wrapper.querySelector('.checkbox-list');
+
+                // Header click
+                header.onclick = (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.ms-dropdown').forEach(d => { if(d !== dropdown) d.classList.remove('active'); });
+                    dropdown.classList.toggle('active');
+                };
+
+                dropdown.onclick = (e) => e.stopPropagation();
+
+                // Filter
+                if (search) {
+                    search.oninput = (e) => {
+                        const val = e.target.value.toLowerCase();
+                        if(list.id === 'adv-reqs') {
+                            renderAdvReqs(val);
+                        } else {
+                            list.querySelectorAll('.checkbox-item').forEach(item => {
+                                const text = item.textContent.toLowerCase();
+                                item.style.display = text.includes(val) ? 'flex' : 'none';
+                            });
+                        }
+                    };
+                }
+
+                // Update header on change
+                list.onchange = () => {
+                    const checked = list.querySelectorAll('input:checked').length;
+                    header.textContent = checked > 0 ? `${checked} selected` : header.getAttribute('data-placeholder');
+                };
+
+                // Set initial header state
+                const checkedInit = list.querySelectorAll('input:checked').length;
+                header.textContent = checkedInit > 0 ? `${checkedInit} selected` : header.getAttribute('data-placeholder');
+            });
         }
 
         function getStatusClass(status) {
@@ -1216,13 +1353,19 @@
             if(af.startDate && c.date < af.startDate) return false;
             if(af.endDate && c.date > af.endDate) return false;
             if(af.agents.length > 0 && !af.agents.includes(c.agent)) return false;
-            if(af.requestTypes.length > 0 && !af.requestTypes.includes(c.req)) return false;
             if(af.actions.length > 0 && !af.actions.includes(c.action)) return false;
             if(af.statuses.length > 0 && !af.statuses.includes(c.status)) return false;
             
             // For relatedTo checking (depending on page structure, reddit/review might use related instead of type)
             if(af.relatedTo.length > 0 && c.related && !af.relatedTo.includes(c.related)) return false;
             
+            const activePage = document.querySelector('.page-view.active').id;
+            if (activePage === 'page-review') {
+                if(af.sentiments && af.sentiments.length > 0 && (!c.sentiment || !af.sentiments.includes(c.sentiment))) return false;
+            } else {
+                if(af.requestTypes.length > 0 && !af.requestTypes.includes(c.req)) return false;
+            }
+
             return true;
         }
 
@@ -1286,9 +1429,8 @@
             state.editingId = caseData.id;
             state.editingKey = dataKey;
             
-            // Switch to appropriate New Entry config
-            document.querySelector(`.btn-new-entry[data-type="${dataKey}"]`)?.click();
-            document.getElementById('panel-title').textContent = "Edit Entry";
+            // Launch panel specifically for editing
+            openEntryPanel(dataKey, true);
             
             // Populate fields
             document.getElementById('form-date').value = caseData.date;
@@ -1324,7 +1466,9 @@
             if (!container) return;
             const tbody = container.querySelector('.table-body');
             if (!tbody) return;
-            const search = container.querySelector('.table-search').value.toLowerCase();
+            
+            const searchInput = container.querySelector('.table-search');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
             
             let filtered = state.cases[dataKey].filter(c => {
@@ -1345,12 +1489,16 @@
                 return matchesSearch && matchesChip && applyAdvFilters(c);
             });
 
-            container.querySelector('.entry-count').textContent = `· ${filtered.length} entries`;
+            // Sort from newest to oldest
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const entryCountEl = container.querySelector('.entry-count');
+            if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
             
-            const closed = filtered.filter(c => c.status === 'Closed').length;
             const pi = filtered.filter(c => c.status === 'Pending internal action').length;
             const pm = filtered.filter(c => c.status === 'Pending member action').length;
-            container.querySelector('.status-counts').textContent = `· ${filtered.length} entries · ${closed} closed · ${pi} pending internal · ${pm} pending member`;
+            const statusCountsEl = container.querySelector('.status-counts');
+            if (statusCountsEl) statusCountsEl.textContent = `· ${pi} pending internal · ${pm} pending member`;
 
             tbody.innerHTML = '';
             filtered.forEach(c => {
@@ -1373,7 +1521,6 @@
                     const sentClass = c.sentiment === 'Positive' ? 'badge-positive' : 'badge-negative';
                     colsHtml += `<td><span class="badge badge-type">${c.type}</span></td>
                                  <td><span class="badge ${sentClass}">${c.sentiment}</span></td>
-                                 <td><span class="badge badge-req">${c.req}</span></td>
                                  <td>${c.action}</td>`;
                 }
 
@@ -1393,7 +1540,9 @@
             if (!container) return;
             const tbody = container.querySelector('.table-body');
             if (!tbody) return;
-            const search = container.querySelector('.table-search').value.toLowerCase();
+            
+            const searchInput = container.querySelector('.table-search');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
             
             // Combine all arrays
             const allCases = [
@@ -1409,8 +1558,13 @@
                 return isPending && matchesSearch && applyAdvFilters(c);
             });
             
-            container.querySelector('.entry-count').textContent = `· ${filtered.length} entries`;
-            container.querySelector('.status-counts').textContent = `· ${filtered.length} pending entries combined`;
+            // Sort from newest to oldest
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const entryCountEl = container.querySelector('.entry-count');
+            if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
+            const statusCountsEl = container.querySelector('.status-counts');
+            if (statusCountsEl) statusCountsEl.textContent = `· ${filtered.length} pending entries combined`;
             
             tbody.innerHTML = '';
             filtered.forEach(c => {
@@ -1460,26 +1614,24 @@
         const overlay = document.getElementById('overlay');
         const sidePanel = document.getElementById('side-panel');
         
-        document.querySelectorAll('.btn-new-entry').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                state.editingId = null;
-                state.editingKey = null;
-                state.activePanelType = e.currentTarget.getAttribute('data-type');
-                
-                const title = state.activePanelType === 'fbig' ? 'FB/IG' : state.activePanelType === 'reddit' ? 'Reddit' : 'Review';
-                document.getElementById('panel-title').textContent = `New ${title} Entry`;
-                
-                document.getElementById('group-type').style.display = (state.activePanelType === 'fbig' || state.activePanelType === 'review') ? 'flex' : 'none';
-                document.getElementById('group-sentiment').style.display = state.activePanelType === 'review' ? 'flex' : 'none';
-                document.getElementById('link-fc-row').style.display = state.activePanelType === 'fbig' ? 'flex' : 'none';
+        function openEntryPanel(type, isEdit = false) {
+            state.activePanelType = type;
+            
+            const title = type === 'fbig' ? 'FB/IG' : type === 'reddit' ? 'Reddit' : 'Review';
+            document.getElementById('panel-title').textContent = (isEdit ? `Edit ${title} Entry` : `New ${title} Entry`);
+            
+            document.getElementById('group-type').style.display = (type === 'fbig' || type === 'review') ? 'flex' : 'none';
+            document.getElementById('group-sentiment').style.display = type === 'review' ? 'flex' : 'none';
+            document.getElementById('link-fc-row').style.display = type === 'fbig' ? 'flex' : 'none';
 
-                if(state.activePanelType === 'fbig' || state.activePanelType === 'review') {
-                    const tSelect = document.getElementById('form-type');
-                    tSelect.innerHTML = '';
-                    const opts = state.activePanelType === 'fbig' ? state.interactionTypes : ["Google Review", "iOS Review"];
-                    opts.forEach(o => tSelect.innerHTML += `<option value="${o}">${o}</option>`);
-                }
+            if(type === 'fbig' || type === 'review') {
+                const tSelect = document.getElementById('form-type');
+                tSelect.innerHTML = '';
+                const opts = type === 'fbig' ? state.interactionTypes : ["Google Review", "iOS Review"];
+                opts.forEach(o => tSelect.innerHTML += `<option value="${o}">${o}</option>`);
+            }
 
+            if (!isEdit) {
                 // Reset Forms to Defaults
                 document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
                 document.getElementById('form-agent').selectedIndex = 0;
@@ -1492,11 +1644,25 @@
                 document.getElementById('form-link-fc').value = '';
                 document.getElementById('form-link-post').value = '';
                 document.getElementById('form-link-ref').value = '';
-                document.getElementById('form-req').classList.remove('error');
-                document.getElementById('form-agent').classList.remove('error');
+                
+                document.querySelectorAll('#form-status .status-btn').forEach(b => b.classList.remove('selected'));
+                const defaultStatus = document.querySelector('#form-status .status-btn[data-value="Closed"]') || document.querySelector('#form-status .status-btn');
+                if(defaultStatus) defaultStatus.classList.add('selected');
+                state.newEntryStatus = defaultStatus ? defaultStatus.getAttribute('data-value') : '';
+            }
+            
+            document.getElementById('form-req').classList.remove('error');
+            document.getElementById('form-agent').classList.remove('error');
 
-                overlay.classList.add('active');
-                sidePanel.classList.add('active');
+            overlay.classList.add('active');
+            sidePanel.classList.add('active');
+        }
+        
+        document.querySelectorAll('.btn-new-entry').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                state.editingId = null;
+                state.editingKey = null;
+                openEntryPanel(e.currentTarget.getAttribute('data-type'), false);
             });
         });
 
@@ -1505,7 +1671,9 @@
             sidePanel.classList.remove('active');
             document.getElementById('filter-modal').classList.remove('active');
             document.getElementById('delete-modal').classList.remove('active');
+            document.getElementById('import-modal').classList.remove('active');
             pendingDelete = null;
+            state.importTarget = null;
             
             // Reset state
             state.editingId = null;
@@ -1524,11 +1692,165 @@
         // Adv Filter Modal Toggles
         document.querySelectorAll('.btn-adv-filter').forEach(btn => {
             btn.addEventListener('click', () => {
+                const activePage = document.querySelector('.page-view.active').id;
+                if (activePage === 'page-review') {
+                    document.getElementById('adv-req-group').style.display = 'none';
+                    document.getElementById('adv-sentiment-group').style.display = 'flex';
+                } else {
+                    document.getElementById('adv-req-group').style.display = 'flex';
+                    document.getElementById('adv-sentiment-group').style.display = 'none';
+                }
+
                 overlay.classList.add('active');
                 document.getElementById('filter-modal').classList.add('active');
             });
         });
         document.getElementById('btn-close-filter').addEventListener('click', closePanel);
+
+        // Import Modal Toggles & Logic
+        document.querySelectorAll('.btn-import-trigger').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                state.importTarget = e.currentTarget.getAttribute('data-type');
+                document.getElementById('import-textarea').value = '';
+                
+                const textarea = document.getElementById('import-textarea');
+                if (state.importTarget === 'reddit') {
+                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tStatus\tRequest type\tDate";
+                } else if (state.importTarget === 'review') {
+                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tStatus\ttype of interaction\tDate\tPositive/ negative review";
+                } else {
+                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tFresh desk Link\tDate\tStatus\ttype of interaction\tRequest type";
+                }
+
+                overlay.classList.add('active');
+                document.getElementById('import-modal').classList.add('active');
+            });
+        });
+
+        document.getElementById('btn-close-import').addEventListener('click', closePanel);
+        document.getElementById('btn-cancel-import').addEventListener('click', closePanel);
+
+        document.getElementById('btn-confirm-import').addEventListener('click', () => {
+            const raw = document.getElementById('import-textarea').value.trim();
+            if (!raw) return closePanel();
+            
+            const selectedYear = document.getElementById('import-year').value;
+            const rows = raw.split('\n');
+            let addedCount = 0;
+            
+            rows.forEach(row => {
+                if (!row.trim()) return;
+                const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',');
+                
+                let dateVal, agent, related, action, status, type, req, refLink, postLink, fcLink, sentimentVal;
+
+                if (state.importTarget === 'reddit') {
+                    // Reddit Order: Name(0), Related to(1), Action Taken(2), Reference link(3), Post/thread Link(4), Status(5), Request type(6), Date(7)
+                    agent = cols[0] ? cols[0].trim() : '-';
+                    related = cols[1] ? cols[1].trim() : '-';
+                    action = cols[2] ? cols[2].trim() : '-';
+                    refLink = cols[3] ? cols[3].trim() : '';
+                    postLink = cols[4] ? cols[4].trim() : '';
+                    fcLink = ''; // Not used for Reddit
+                    status = cols[5] ? cols[5].trim() : 'Closed';
+                    type = '-'; // Not used for Reddit
+                    req = cols[6] ? cols[6].trim() : '-';
+                    dateVal = cols[7] ? cols[7].trim() : '';
+                } else if (state.importTarget === 'review') {
+                    // Review Order: Name(0), Related to(1), Action Taken(2), Reference link(3), Post/thread Link(4), Status(5), type of interaction(6), Date(7), Positive/negative(8)
+                    agent = cols[0] ? cols[0].trim() : '-';
+                    related = cols[1] ? cols[1].trim() : '-';
+                    action = cols[2] ? cols[2].trim() : '-';
+                    refLink = cols[3] ? cols[3].trim() : '';
+                    postLink = cols[4] ? cols[4].trim() : '';
+                    fcLink = ''; // Not used for Review
+                    status = cols[5] ? cols[5].trim() : 'Closed';
+                    type = cols[6] ? cols[6].trim() : '-';
+                    dateVal = cols[7] ? cols[7].trim() : '';
+                    sentimentVal = cols[8] ? cols[8].trim() : 'Positive';
+                    req = '-'; // Not used for Review
+                } else {
+                    // FB/IG Order: 0:Name, 1:Related to, 2:Action Taken, 3:Reference link, 4:Post Link, 5:Fresh desk Link, 6:Date, 7:Status, 8:type of interaction, 9:Request type
+                    agent = cols[0] ? cols[0].trim() : '-';
+                    related = cols[1] ? cols[1].trim() : '-';
+                    action = cols[2] ? cols[2].trim() : '-';
+                    refLink = cols[3] ? cols[3].trim() : '';
+                    postLink = cols[4] ? cols[4].trim() : '';
+                    fcLink = cols[5] ? cols[5].trim() : '';
+                    dateVal = cols[6] ? cols[6].trim() : '';
+                    status = cols[7] ? cols[7].trim() : 'Closed';
+                    type = cols[8] ? cols[8].trim() : '-';
+                    req = cols[9] ? cols[9].trim() : '-';
+                }
+
+                if (!dateVal) {
+                    dateVal = new Date().toISOString().split('T')[0];
+                } else {
+                    const hasYear = /\b\d{4}\b/.test(dateVal);
+                    const d = new Date(hasYear ? dateVal : `${dateVal} ${selectedYear}`);
+                    
+                    if (isNaN(d.valueOf())) {
+                        dateVal = new Date().toISOString().split('T')[0]; // fallback if totally unparseable
+                    } else {
+                        // Use local date parts to prevent timezone offsets from shifting "1 January" to the previous day
+                        dateVal = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    }
+                }
+
+                // Parse links: ignore if it's "N/A", doesn't contain a dot, or has spaces (e.g. "tempo app")
+                if (refLink.toUpperCase() === 'N/A' || !refLink.includes('.') || refLink.includes(' ')) refLink = '';
+                if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
+                if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
+
+                const entry = {
+                    id: Date.now() + Math.random(),
+                    date: dateVal,
+                    agent: agent,
+                    related: related,
+                    action: action,
+                    status: status,
+                    type: type,
+                    req: req,
+                    links: {
+                        ref: refLink,
+                        post: postLink,
+                        fc: fcLink
+                    }
+                };
+                
+                // For review cases, map sentiment gracefully
+                if (state.importTarget === 'review') {
+                    entry.sentiment = (sentimentVal && sentimentVal.toLowerCase().includes('neg')) ? 'Negative' : 'Positive';
+                    
+                    // Fallback to gracefully handle if they accidentally shifted columns into type/related
+                    if (["Positive", "Negative"].includes(entry.type)) {
+                        entry.sentiment = entry.type;
+                        entry.type = related !== '-' ? related : 'Google Review';
+                    } else if (["Positive", "Negative"].includes(entry.related)) {
+                        entry.sentiment = entry.related;
+                    }
+                }
+                
+                state.cases[state.importTarget].unshift(entry);
+                addedCount++;
+                
+                // Add any new dropdown values to state automatically
+                if (entry.agent !== '-' && !state.agents.includes(entry.agent)) state.agents.push(entry.agent);
+                if (entry.req !== '-' && !state.requestTypes.includes(entry.req)) state.requestTypes.push(entry.req);
+                if (entry.action !== '-' && !state.actions.includes(entry.action)) state.actions.push(entry.action);
+                if (entry.related && entry.related !== '-' && !state.relatedTo.includes(entry.related)) state.relatedTo.push(entry.related);
+                if (entry.type && entry.type !== '-' && !state.interactionTypes.includes(entry.type) && state.importTarget === 'fbig') state.interactionTypes.push(entry.type);
+            });
+
+            populateDropdowns();
+            populateAdvFilters();
+            renderAllTables();
+            
+            if (document.getElementById('page-weekly').classList.contains('active')) renderWeeklyReview();
+            if (document.getElementById('page-monthly').classList.contains('active')) renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+            
+            closePanel();
+        });
 
         // Status & Sentiment Selectors
         document.querySelectorAll('#form-status .status-btn').forEach(b => {
@@ -1610,6 +1932,15 @@
             state.advFilters.relatedTo = getCheckedValues('relatedTo');
             state.advFilters.actions = getCheckedValues('actions');
             state.advFilters.statuses = getCheckedValues('statuses');
+            state.advFilters.sentiments = getCheckedValues('sentiments');
+            
+            // Update Headers
+            document.querySelectorAll('.multi-select-wrapper').forEach(wrapper => {
+                const header = wrapper.querySelector('.ms-header');
+                const list = wrapper.querySelector('.checkbox-list');
+                const checkedCount = list.querySelectorAll('input:checked').length;
+                header.textContent = checkedCount > 0 ? `${checkedCount} selected` : header.getAttribute('data-placeholder');
+            });
             
             renderAllTables();
             closePanel();
@@ -1620,7 +1951,11 @@
             document.getElementById('adv-end').value = '';
             document.querySelectorAll('.checkbox-item input').forEach(cb => cb.checked = false);
             
-            state.advFilters = { startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [] };
+            document.querySelectorAll('.multi-select-wrapper .ms-header').forEach(header => {
+                header.textContent = header.getAttribute('data-placeholder');
+            });
+            
+            state.advFilters = { startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [], sentiments: [] };
             renderAllTables();
         });
 
@@ -1872,6 +2207,68 @@
             
             document.getElementById('mo-range-label').textContent = targetD.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
 
+            // Special Case: REVIEW TAB
+            if (tab === 'review') {
+                let targetCases = state.cases.review.map(c=>({...c, _source:'review'}));
+                targetCases = targetCases.filter(c => {
+                    const cd = new Date(c.date + 'T12:00:00');
+                    return cd.getMonth() === targetMonth && cd.getFullYear() === targetYear;
+                });
+
+                const reviewStats = {
+                    'iOS Review': { Positive: 0, Negative: 0 },
+                    'Google Review': { Positive: 0, Negative: 0 }
+                };
+
+                targetCases.forEach(c => {
+                    if (reviewStats[c.type]) {
+                        if (c.sentiment === 'Positive') reviewStats[c.type].Positive++;
+                        if (c.sentiment === 'Negative') reviewStats[c.type].Negative++;
+                    }
+                });
+
+                const iosPos = reviewStats['iOS Review'].Positive;
+                const iosNeg = reviewStats['iOS Review'].Negative;
+                const gogPos = reviewStats['Google Review'].Positive;
+                const gogNeg = reviewStats['Google Review'].Negative;
+
+                const totalPos = iosPos + gogPos;
+                const totalNeg = iosNeg + gogNeg;
+
+                let html = `
+                    <div class="da-section" style="max-width: 600px; margin: 0;">
+                        <table class="da-table">
+                            <tr>
+                                <th>Platform</th>
+                                <th>Positive</th>
+                                <th>Negative</th>
+                                <th>Total</th>
+                            </tr>
+                            <tr>
+                                <td>iOS Review</td>
+                                <td>${iosPos}</td>
+                                <td>${iosNeg}</td>
+                                <td>${iosPos + iosNeg}</td>
+                            </tr>
+                            <tr>
+                                <td>Google Review</td>
+                                <td>${gogPos}</td>
+                                <td>${gogNeg}</td>
+                                <td>${gogPos + gogNeg}</td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>Grand Total</td>
+                                <td>${totalPos}</td>
+                                <td>${totalNeg}</td>
+                                <td>${totalPos + totalNeg}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+                document.getElementById('mo-container').innerHTML = html;
+                return; // Early return for Review tab
+            }
+
             let targetCases = [];
             if (tab === 'all') {
                 targetCases = [...state.cases.fbig.map(c=>({...c, _source:'fbig'}))];
@@ -1933,7 +2330,7 @@
                 <div class="stat-card"><h3>Top Request</h3><div class="val" style="font-size:16px;">${topKey} <span>${topVal}</span></div></div>
             </div>`;
 
-            if(Object.keys(channelsMap).length > 0) {
+            if(Object.keys(channelsMap).length > 0 && tab !== 'all') {
                 html += `<div class="stat-grid">`;
                 Object.keys(channelsMap).forEach(k => {
                     html += `<div class="stat-card" style="border-color:var(--purple-border); background:var(--purple-bg);">
@@ -2004,6 +2401,137 @@
 
         function destroyChart(id) {
             if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+        }
+
+        // --- EXPORT LOGIC ---
+        function handleExport() {
+            const activePage = document.querySelector('.page-view.active').id;
+            const container = document.getElementById(activePage);
+            let data = [];
+            let headers = [];
+            let filename = 'export.csv';
+
+            // Function to filter exactly like rendering
+            const getFiltered = (dataKey) => {
+                const searchInput = container.querySelector('.table-search');
+                const search = searchInput ? searchInput.value.toLowerCase() : '';
+                const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
+
+                let filtered = state.cases[dataKey].filter(c => {
+                    let matchesSearch = c.agent.toLowerCase().includes(search) || 
+                                        (c.type && c.type.toLowerCase().includes(search)) ||
+                                        (c.req && c.req.toLowerCase().includes(search));
+                    let matchesChip = true;
+                    if (activeChip !== 'All') {
+                        if (dataKey === 'fbig' || dataKey === 'review') {
+                            matchesChip = c.type === activeChip || c.sentiment === activeChip;
+                        } else if (dataKey === 'reddit') {
+                            matchesChip = c.related === activeChip;
+                        }
+                    }
+                    return matchesSearch && matchesChip && applyAdvFilters(c);
+                });
+                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+                return filtered;
+            };
+
+            if (activePage === 'page-fbig') {
+                headers = ['Date', 'Agent Name', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
+                filename = 'fbig_cases.csv';
+                data = getFiltered('fbig').map(c => [
+                    formatDate(c.date), c.agent, c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
+                ]);
+            } else if (activePage === 'page-reddit') {
+                headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Post / Thread Link', 'Reference Link'];
+                filename = 'reddit_cases.csv';
+                data = getFiltered('reddit').map(c => [
+                    formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || ''
+                ]);
+            } else if (activePage === 'page-review') {
+                headers = ['Date', 'Agent Name', 'Type', 'Sentiment', 'Action Taken', 'Status', 'Reference Link'];
+                filename = 'review_cases.csv';
+                data = getFiltered('review').map(c => [
+                    formatDate(c.date), c.agent, c.type, c.sentiment, c.action, c.status, c.links.ref || ''
+                ]);
+            } else if (activePage === 'page-pending') {
+                headers = ['Date', 'Source', 'Agent Name', 'Type / Related', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
+                filename = 'pending_cases.csv';
+                
+                const searchInput = container.querySelector('.table-search');
+                const search = searchInput ? searchInput.value.toLowerCase() : '';
+                
+                const allCases = [
+                    ...state.cases.fbig.map(c => ({...c, _sourceName: 'FB/IG'})),
+                    ...state.cases.reddit.map(c => ({...c, _sourceName: 'Reddit'})),
+                    ...state.cases.review.map(c => ({...c, _sourceName: 'Review'}))
+                ];
+                
+                let filtered = allCases.filter(c => {
+                    let isPending = c.status.toLowerCase().includes('pending');
+                    let matchesSearch = c.agent.toLowerCase().includes(search) || 
+                                        (c.req && c.req.toLowerCase().includes(search));
+                    return isPending && matchesSearch && applyAdvFilters(c);
+                });
+                
+                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+                data = filtered.map(c => [
+                    formatDate(c.date), c._sourceName, c.agent, c.type || c.related, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
+                ]);
+            } else if (activePage === 'page-weekly' || activePage === 'page-monthly') {
+                let csvStr = '';
+                const tables = container.querySelectorAll('.da-table');
+                if(tables.length === 0) return alert('No data to export here.');
+                
+                tables.forEach(table => {
+                    const rows = table.querySelectorAll('tr');
+                    rows.forEach(tr => {
+                        const rowData = [];
+                        const cols = tr.querySelectorAll('th, td');
+                        cols.forEach(c => rowData.push('"' + c.innerText.replace(/"/g, '""') + '"'));
+                        csvStr += rowData.join(',') + '\n';
+                    });
+                    csvStr += '\n'; // Spacer between tables
+                });
+                
+                filename = activePage === 'page-weekly' ? 'weekly_review.csv' : 'monthly_review.csv';
+                
+                const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            }
+
+            if (data.length === 0) {
+                alert('No data to export based on current view/filters.');
+                return;
+            }
+
+            let csvContent = headers.join(",") + "\n";
+            data.forEach(row => {
+                let formattedRow = row.map(field => {
+                    if (field == null) field = '';
+                    let strField = String(field);
+                    if (strField.includes(',') || strField.includes('"') || strField.includes('\n')) {
+                        strField = '"' + strField.replace(/"/g, '""') + '"';
+                    }
+                    return strField;
+                });
+                csvContent += formattedRow.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // Boot
