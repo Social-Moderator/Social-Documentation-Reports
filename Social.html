@@ -1064,7 +1064,14 @@
         </div>
     </div>
 
-    <script>
+    <!-- Supabase Imports and Module Logic -->
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+        const supabaseUrl = 'https://zyxogrxhwxwebccfuxzs.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5eG9ncnhod3h3ZWJjY2Z1eHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3ODczNTEsImV4cCI6MjA5NDM2MzM1MX0.1Z0BJgdk-Oc9Hy0kNlkNKb_PHiPKw8AnHx3l7urCjIE';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
         // --- DATA STATE ---
         const state = {
             agents: ["Lina Hashem", "Job James", "Ariath Piol"],
@@ -1072,22 +1079,8 @@
             actions: ["Motivated Member", "Provided support from FAQ", "Provided Support from Slack Channel", "Directed Member to contact Support", "Directed Customer to DM", "Feedback/Sugg Raised on Slack", "Provided from Kustomer Canned Response", "Provided Support from SOP/Retool/shopify/App"],
             requestTypes: ["3PL Communications", "Accessories Cancellation", "Accessories Damaged", "Accessories Delayed", "Accessories discount promotion", "Accessories Emergent", "Accessories ETA", "Accessories Inquiry", "Accessories MFG Issue", "Accessories Missing", "Accessories Refund", "Accessories Replacement", "Accessories Return", "Accessory Tech Issue", "Account remove", "Add-On ETA", "Address Change", "Affirm Inquiry", "Apparel Store Discount", "Bestbuy", "Buy Items", "Buyout", "Churn Program", "Classes Inquiry", "Cleaning Instructions", "Coach Intro Call", "Color change", "Compensation Request", "Contact info Change", "Creating Order", "Damaged Studio", "Delayed Bundle Accessories", "Delayed Bundle Accessories cancelation", "Delayed Bundle Accessories compensation", "Delayed Bundle Accessories ETA", "Delayed Bundle Accessories Inquiry", "Discount Code", "Downgrade membership", "Edit Order", "Email Address Update", "Escalation", "Exception Request", "Expedite Shipping", "Family Invite", "Family Member Profile Deletion", "FedEx Call", "Feedback", "Finance Dept.", "Fitness Coaching", "Flowspace OB", "Free core inquiry", "Free Shirt Inquiry", "Friendbuy Advocate", "Friendbuy Reward", "General Inquiry", "Gift Code", "GiftBox Promotion", "Giveaway Order", "Gympass", "Holding Delivery", "HOLIDAY100 price match", "HOLIDAY1000 price match", "International delivery", "Leasing Cancelation", "logistics raise", "Marketing Emails Issue", "Membership Activation", "Membership cancelation", "Membership CC update", "Membership Charge Date Change", "Membership Creation", "Membership Discount", "Membership Email Change", "Membership Free Months", "Membership Inquiry", "Membership Invoice", "Membership Pause", "Membership Refund", "Membership Single Login", "Membership Upgrade", "Membership Prepaid bundle purchase", "Mobile App", "Move Boxes", "Move Cancellation", "Move Color Change", "Move Delivery Issue", "Move Discount", "Move ETA", "Move Gift", "Move Part Replacement", "Move Received Damaged", "Move Refund", "Move Replacement", "Move Return", "Move Tech Issue", "My Plan Inquiry", "NPS", "Order Info", "Ownership Transfer", "Partnership", "Payment Method", "Product Specs", "Promotions", "Receipt Request", "Referral Program", "Refund", "Refurbished", "Replacement ETA", "Reset Password", "SBS", "Sending Invoice", "Shipping", "Social Team", "Stuck Plates", "Studio Cancellation", "Studio Delivery issue (Elite)", "Studio Delivery issue (XPO-RXO)", "Studio Delivery issue (Ryder)", "Studio Downgrade/Upgrade", "Studio ETA", "Studio Refund", "Studio Return", "Studio Swap ETA", "Studio Tech issue", "Survey Email", "Tempo One Inquiry", "Website Error", "WGS Issue", "Workout Recommendation", "Apple watch connectivity issue", "Reschedule delivery", "Compatibility", "Form feedback", "Rep counting", "Live classes", "Rental", "App support", "Add/Remove Profile", "Trot Challenge", "Change Billing Info", "Music Stations Inquiry", "Prospective", "Unresponsive", "Fitmas Challenge", "Add equipment", "Garage/outdoor", "Incomplete class", "Membership Reactivation", "Safety Guide", "Delivery ETA", "Current discounts", "Core purchase request", "Shoutout request", "Buy/sell tempo", "Accessories waitlist", "Suggestion", "Strava", "New Year's Challenge", "Delayed order", "GPU Fluttering", "Apparel store exchange", "Tempo Updates", "Heart HIITERs Challenge", "Spring challenge", "Encore Classes", "Feature request", "Cloud trainer feature", "Military Discount", "Outdoor studio storage", "Beta Testing", "Range of motion", "5k running Challenge", "Apparel inquiry", "Can't Locate a Program", "Bench address technical issue", "Chat with your coach", "Connection Issues", "Network Issues Buffering", "Can't Locate a Class", "Airpods Connectivity", "Live Classes Issues", "Weight Recommendation", "Unit pickup", "Advertisements", "Folding Bench Inquiry", "Weekly Strength Set Goals", "HRM inquiry", "Squat Rack Setup", "Weight Detection", "Apple Health Sync", "Stream Classes using the App", "Injury advice", "Audio cue", "Accessories order", "Network Issues", "Classes filtration", "Tempo Athletes Inquiry", "Squat Rack Issues", "Apple Watch Connectivity", "Macbook Compatibility", "Group community-related", "Untracked exercises", "Audio Cues feature", "Workout Mat Washable", "HDMI cable", "Studio Delivery Issue", "Workout Preferences", "Paused Classes/Feedback", "Freezing Update", "Mobile App Issue", "Programs Inquiry", "Tempo Move Connectivity", "Accessories Issue", "Tempo new experience", "Music issue", "Fitness Inquiry", "HRM Issues", "Summer challenge", "Workout History", "Reps Info", "WIFI External Adaptor", "Adjusting Weight Manually", "Streaks Inquiry", "Airplay Screen Mirroring", "Moving Tempo Studio", "Leaderboard Ranking Issues", "Weight entry issue", "Android complaint", "Join multiple program", "Strava integration with Tempo app", "Fitbit integration", "Challenges feedback", "Completed program Tab", "Reformer Pilates", "Adding classes to favorites", "Apple Watch complication", "Upgrade bundles of equipment", "Personalized Workout Creator Feature Request", "Tempo Trainer", "Calendar issue", "Live class notification issue", "Training plan inquiry", "Weight Calibration Classes", "Progress Hub", "Live Guided Programs", "Schedule classes", "Equipment inquiry", "Bluetooth Inquiry", "Dynamic rest", "Studio inquiry", "Website quiz", "Training plan issue", "Classes tab Redesign", "Mirror mode", "Email issue", "Body scan Comparison feature", "Downloadable workout", "Summer Sculpt Challenge", "Calendar selection", "Remove Profiles", "Leaderboard Ranking inquiry", "Tempo challenges", "Challenge Badges", "Tempo Move inquiry", "Android Body Scan", "Challenge pins", "Mirror mode Studio", "Mirror mode Move", "Leaderboard Groups", "Core Bundle Inquiry", "Challenge Completion email", "Reps in Reverse", "Reps overcounting", "Unsupported old apple watches", "End of Summer challenge", "Fit For Fall Challenge", "Welcome Kit", "Unable to log in", "Community feature", "Readiness score", "FSA/HSA", "Numbers discrepancy", "Flex program issue", "iPhone 16e incompatible", "Tempo ambassador program", "Post approval", "Studio availability", "Android compatibility/support", "Workout records issue", "Core replacement", "Renewed Tempo Move", "2025 Year Recap", "Extended dumbbells", "Body scan issue", "Delayed/lost pin", "Postage due", "Move color swap", "Lightening core availability", "Challenge end date", "iPhone 15 core inquiry"],
             statuses: ["Closed", "Pending internal action", "Pending member action"],
-            interactionTypes: ["DM", "Page comments", "Group comments", "Instagram Comments", "Instagram DM"], // Editable unified interactions list
-            
-            // Dummy Data for tables
-            cases: {
-                fbig: [
-                    { id: 1, date: '2026-05-10', agent: 'Lina Hashem', type: 'DM', req: 'Refund', action: 'Provided Support from SOP/Retool/shopify/App', status: 'Closed', links: {fc:'#', post:''} },
-                    { id: 2, date: '2026-05-09', agent: 'Ariath Piol', type: 'Page comments', req: 'Delayed order', action: 'Directed Customer to DM', status: 'Pending internal action', links: {post:'#', ref:''} }
-                ],
-                reddit: [
-                    { id: 3, date: '2026-05-08', agent: 'Job James', related: 'Support General Inquiry', req: 'Feedback', action: 'Feedback/Sugg Raised on Slack', status: 'Pending member action', links: {post:'#'} }
-                ],
-                review: [
-                    { id: 4, date: '2026-05-07', agent: 'Lina Hashem', type: 'Google Review', sentiment: 'Negative', req: 'App support', action: 'Motivated Member', status: 'Closed', links: {ref:'#'} },
-                    { id: 5, date: '2026-05-12', agent: 'Ariath Piol', type: 'iOS Review', sentiment: 'Positive', req: 'App support', action: 'Motivated Member', status: 'Closed', links: {ref:'#'} }
-                ]
-            },
+            interactionTypes: ["DM", "Page comments", "Group comments", "Instagram Comments", "Instagram DM"],
+            cases: { fbig: [], reddit: [], review: [] },
             
             activePanelType: 'fbig',
             newEntryStatus: 'Closed',
@@ -1110,11 +1103,29 @@
         const svgEdit = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const svgDel = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-        let charts = {}; // Store chart instances
+        let charts = {};
+
+        // --- SUPABASE SYNC UTILS ---
+        window.saveState = async function() {
+            const stateToSave = {
+                agents: state.agents,
+                relatedTo: state.relatedTo,
+                actions: state.actions,
+                requestTypes: state.requestTypes,
+                statuses: state.statuses,
+                interactionTypes: state.interactionTypes,
+                cases: state.cases,
+            };
+            try {
+                const { error } = await supabase.from('app_data').upsert({ id: 'main', data: stateToSave });
+                if (error) throw error;
+            } catch (e) {
+                console.error("Error saving state to Supabase:", e);
+            }
+        };
 
         // --- INIT & UTILS ---
         function init() {
-            // Initialize View State dates based on today
             const today = new Date();
             state.viewState.weeklyEndMonday = getMonday(today.toISOString().split('T')[0]);
             state.viewState.monthlyDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
@@ -1127,11 +1138,8 @@
             renderAllTables();
             
             setupDateControlListeners();
-
-            // Export listeners
             document.querySelectorAll('.btn-export').forEach(btn => btn.addEventListener('click', handleExport));
 
-            // Populate Import Year Options
             const currentYear = new Date().getFullYear();
             const yearSelect = document.getElementById('import-year');
             if (yearSelect) {
@@ -1140,17 +1148,13 @@
                 }
             }
 
-            // Default select FB/IG
             document.querySelector('[data-target="page-fbig"]').click();
-            // Pre-fill date
             document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
             
-            // Set up search for Edit Request Types
             document.getElementById('search-edit-req').addEventListener('input', (e) => {
                 renderEditList('list-req', state.requestTypes, 'requestTypes', e.target.value);
             });
             
-            // Load theme
             document.getElementById('setting-theme').addEventListener('change', (e) => {
                 if (e.target.value === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
@@ -1159,21 +1163,61 @@
                     document.documentElement.removeAttribute('data-theme');
                     Chart.defaults.color = '#888888';
                 }
-                // Update charts if they exist
                 ['wk1', 'wk2', 'wk3', 'wk4', 'mo1'].forEach(id => {
                     if (charts[id]) charts[id].update();
                 });
             });
-            // Init Chart colors globally
             Chart.defaults.color = '#888888';
             
-            // Close MS Dropdowns when clicking outside
             document.addEventListener('click', (e) => {
                 if(!e.target.closest('.multi-select-wrapper')) {
                     document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
                 }
+                if(!e.target.closest('.row-dropdown-wrapper')) {
+                    document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('active'));
+                }
             });
+
+            // Initialize Data from Supabase
+            const loadSupabaseData = async () => {
+                try {
+                    const { data, error } = await supabase.from('app_data').select('data').eq('id', 'main').single();
+                    if (error) {
+                        console.warn("Supabase fetch warning (might not exist yet):", error.message);
+                    }
+                    if (data && data.data) {
+                        const dbData = data.data;
+                        state.agents = dbData.agents || state.agents;
+                        state.relatedTo = dbData.relatedTo || state.relatedTo;
+                        state.actions = dbData.actions || state.actions;
+                        state.requestTypes = dbData.requestTypes || state.requestTypes;
+                        state.statuses = dbData.statuses || state.statuses;
+                        state.interactionTypes = dbData.interactionTypes || state.interactionTypes;
+                        state.cases = dbData.cases || state.cases;
+                    } else {
+                        window.saveState();
+                    }
+                    
+                    populateDropdowns();
+                    populateAdvFilters();
+                    renderAllTables();
+                    
+                    if (document.getElementById('page-weekly').classList.contains('active')) renderWeeklyReview();
+                    if (document.getElementById('page-monthly').classList.contains('active')) renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+                } catch (err) {
+                    console.error("Critical connection error:", err);
+                }
+            };
+            loadSupabaseData();
         }
+
+        window.toggleRowDropdown = function(e) {
+            e.stopPropagation();
+            const dropdown = e.currentTarget.nextElementSibling;
+            const isActive = dropdown.classList.contains('active');
+            document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('active'));
+            if (!isActive) dropdown.classList.add('active');
+        };
 
         function setupAutocomplete(inputId, listId, dataArrayKey) {
             const inp = document.getElementById(inputId);
@@ -1266,7 +1310,6 @@
             const renderAdvReqs = (filterTxt = '') => {
                 const arr = filterTxt ? state.requestTypes.filter(r => r.toLowerCase().includes(filterTxt.toLowerCase())) : state.requestTypes;
                 document.getElementById('adv-reqs').innerHTML = arr.map(v => createCb(v, 'requestTypes')).join('');
-                // Restore checked state if already selected in state
                 document.querySelectorAll('#adv-reqs input').forEach(inp => {
                     if (state.advFilters.requestTypes.includes(inp.value)) inp.checked = true;
                 });
@@ -1274,21 +1317,18 @@
             
             renderAdvReqs();
             
-            // Restore checked state for other inputs based on state.advFilters
             ['agents', 'relatedTo', 'actions', 'statuses', 'sentiments'].forEach(key => {
                 document.querySelectorAll(`#adv-${key} input`).forEach(inp => {
                     if (state.advFilters[key].includes(inp.value)) inp.checked = true;
                 });
             });
 
-            // Initialize multi-select behaviors
             document.querySelectorAll('.multi-select-wrapper').forEach(wrapper => {
                 const header = wrapper.querySelector('.ms-header');
                 const dropdown = wrapper.querySelector('.ms-dropdown');
                 const search = wrapper.querySelector('.ms-search');
                 const list = wrapper.querySelector('.checkbox-list');
 
-                // Header click
                 header.onclick = (e) => {
                     e.stopPropagation();
                     document.querySelectorAll('.ms-dropdown').forEach(d => { if(d !== dropdown) d.classList.remove('active'); });
@@ -1297,7 +1337,6 @@
 
                 dropdown.onclick = (e) => e.stopPropagation();
 
-                // Filter
                 if (search) {
                     search.oninput = (e) => {
                         const val = e.target.value.toLowerCase();
@@ -1312,13 +1351,11 @@
                     };
                 }
 
-                // Update header on change
                 list.onchange = () => {
                     const checked = list.querySelectorAll('input:checked').length;
                     header.textContent = checked > 0 ? `${checked} selected` : header.getAttribute('data-placeholder');
                 };
 
-                // Set initial header state
                 const checkedInit = list.querySelectorAll('input:checked').length;
                 header.textContent = checkedInit > 0 ? `${checkedInit} selected` : header.getAttribute('data-placeholder');
             });
@@ -1338,7 +1375,7 @@
         function getMonday(dStr) {
             const d = new Date(dStr + 'T12:00:00');
             const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // shift to Monday
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
             return new Date(d.setDate(diff)).toISOString().split('T')[0];
         }
 
@@ -1355,8 +1392,6 @@
             if(af.agents.length > 0 && !af.agents.includes(c.agent)) return false;
             if(af.actions.length > 0 && !af.actions.includes(c.action)) return false;
             if(af.statuses.length > 0 && !af.statuses.includes(c.status)) return false;
-            
-            // For relatedTo checking (depending on page structure, reddit/review might use related instead of type)
             if(af.relatedTo.length > 0 && c.related && !af.relatedTo.includes(c.related)) return false;
             
             const activePage = document.querySelector('.page-view.active').id;
@@ -1412,8 +1447,8 @@
 
         document.getElementById('btn-confirm-del').addEventListener('click', () => {
             if(pendingDelete) {
-                // Using != instead of !== in case id is cast to string
                 state.cases[pendingDelete.dataKey] = state.cases[pendingDelete.dataKey].filter(c => c.id != pendingDelete.id);
+                window.saveState();
                 renderAllTables();
             }
             pendingDelete = null;
@@ -1422,17 +1457,14 @@
         });
 
         window.editCase = function(dataKey, id) {
-            // loose check in case id comes back as a string from the HTML onclick binding
             const caseData = state.cases[dataKey].find(c => c.id == id);
             if(!caseData) return;
             
             state.editingId = caseData.id;
             state.editingKey = dataKey;
             
-            // Launch panel specifically for editing
             openEntryPanel(dataKey, true);
             
-            // Populate fields
             document.getElementById('form-date').value = caseData.date;
             document.getElementById('form-agent').value = caseData.agent;
             if(caseData.related) document.getElementById('form-related').value = caseData.related;
@@ -1472,11 +1504,9 @@
             const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
             
             let filtered = state.cases[dataKey].filter(c => {
-                // Search
                 let matchesSearch = c.agent.toLowerCase().includes(search) || 
                                     (c.type && c.type.toLowerCase().includes(search)) ||
                                     (c.req && c.req.toLowerCase().includes(search));
-                // Chip
                 let matchesChip = true;
                 if (activeChip !== 'All') {
                     if (dataKey === 'fbig' || dataKey === 'review') {
@@ -1485,11 +1515,9 @@
                         matchesChip = c.related === activeChip;
                     }
                 }
-                
                 return matchesSearch && matchesChip && applyAdvFilters(c);
             });
 
-            // Sort from newest to oldest
             filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             const entryCountEl = container.querySelector('.entry-count');
@@ -1544,7 +1572,6 @@
             const searchInput = container.querySelector('.table-search');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
             
-            // Combine all arrays
             const allCases = [
                 ...state.cases.fbig.map(c => ({...c, _source: 'fbig', _sourceName: 'FB/IG'})),
                 ...state.cases.reddit.map(c => ({...c, _source: 'reddit', _sourceName: 'Reddit'})),
@@ -1558,7 +1585,6 @@
                 return isPending && matchesSearch && applyAdvFilters(c);
             });
             
-            // Sort from newest to oldest
             filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             const entryCountEl = container.querySelector('.entry-count');
@@ -1599,7 +1625,6 @@
             renderPendingTable();
         }
 
-        // Search & Chips
         document.querySelectorAll('.table-search').forEach(inp => inp.addEventListener('input', () => renderAllTables()));
         document.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', (e) => {
@@ -1632,12 +1657,10 @@
             }
 
             if (!isEdit) {
-                // Reset Forms to Defaults
                 document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
                 document.getElementById('form-agent').selectedIndex = 0;
                 document.getElementById('form-related').selectedIndex = 0;
                 
-                // Clear searchable inputs
                 document.getElementById('form-action').value = '';
                 document.getElementById('form-req').value = '';
                 
@@ -1675,7 +1698,6 @@
             pendingDelete = null;
             state.importTarget = null;
             
-            // Reset state
             state.editingId = null;
             state.editingKey = null;
             
@@ -1689,7 +1711,6 @@
         document.getElementById('btn-cancel').addEventListener('click', closePanel);
         overlay.addEventListener('click', closePanel);
 
-        // Adv Filter Modal Toggles
         document.querySelectorAll('.btn-adv-filter').forEach(btn => {
             btn.addEventListener('click', () => {
                 const activePage = document.querySelector('.page-view.active').id;
@@ -1707,7 +1728,6 @@
         });
         document.getElementById('btn-close-filter').addEventListener('click', closePanel);
 
-        // Import Modal Toggles & Logic
         document.querySelectorAll('.btn-import-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 state.importTarget = e.currentTarget.getAttribute('data-type');
@@ -1736,7 +1756,6 @@
             
             const selectedYear = document.getElementById('import-year').value;
             const rows = raw.split('\n');
-            let addedCount = 0;
             
             rows.forEach(row => {
                 if (!row.trim()) return;
@@ -1745,32 +1764,29 @@
                 let dateVal, agent, related, action, status, type, req, refLink, postLink, fcLink, sentimentVal;
 
                 if (state.importTarget === 'reddit') {
-                    // Reddit Order: Name(0), Related to(1), Action Taken(2), Reference link(3), Post/thread Link(4), Status(5), Request type(6), Date(7)
                     agent = cols[0] ? cols[0].trim() : '-';
                     related = cols[1] ? cols[1].trim() : '-';
                     action = cols[2] ? cols[2].trim() : '-';
                     refLink = cols[3] ? cols[3].trim() : '';
                     postLink = cols[4] ? cols[4].trim() : '';
-                    fcLink = ''; // Not used for Reddit
+                    fcLink = ''; 
                     status = cols[5] ? cols[5].trim() : 'Closed';
-                    type = '-'; // Not used for Reddit
+                    type = '-'; 
                     req = cols[6] ? cols[6].trim() : '-';
                     dateVal = cols[7] ? cols[7].trim() : '';
                 } else if (state.importTarget === 'review') {
-                    // Review Order: Name(0), Related to(1), Action Taken(2), Reference link(3), Post/thread Link(4), Status(5), type of interaction(6), Date(7), Positive/negative(8)
                     agent = cols[0] ? cols[0].trim() : '-';
                     related = cols[1] ? cols[1].trim() : '-';
                     action = cols[2] ? cols[2].trim() : '-';
                     refLink = cols[3] ? cols[3].trim() : '';
                     postLink = cols[4] ? cols[4].trim() : '';
-                    fcLink = ''; // Not used for Review
+                    fcLink = ''; 
                     status = cols[5] ? cols[5].trim() : 'Closed';
                     type = cols[6] ? cols[6].trim() : '-';
                     dateVal = cols[7] ? cols[7].trim() : '';
                     sentimentVal = cols[8] ? cols[8].trim() : 'Positive';
-                    req = '-'; // Not used for Review
+                    req = '-'; 
                 } else {
-                    // FB/IG Order: 0:Name, 1:Related to, 2:Action Taken, 3:Reference link, 4:Post Link, 5:Fresh desk Link, 6:Date, 7:Status, 8:type of interaction, 9:Request type
                     agent = cols[0] ? cols[0].trim() : '-';
                     related = cols[1] ? cols[1].trim() : '-';
                     action = cols[2] ? cols[2].trim() : '-';
@@ -1788,16 +1804,13 @@
                 } else {
                     const hasYear = /\b\d{4}\b/.test(dateVal);
                     const d = new Date(hasYear ? dateVal : `${dateVal} ${selectedYear}`);
-                    
                     if (isNaN(d.valueOf())) {
-                        dateVal = new Date().toISOString().split('T')[0]; // fallback if totally unparseable
+                        dateVal = new Date().toISOString().split('T')[0];
                     } else {
-                        // Use local date parts to prevent timezone offsets from shifting "1 January" to the previous day
                         dateVal = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                     }
                 }
 
-                // Parse links: ignore if it's "N/A", doesn't contain a dot, or has spaces (e.g. "tempo app")
                 if (refLink.toUpperCase() === 'N/A' || !refLink.includes('.') || refLink.includes(' ')) refLink = '';
                 if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
                 if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
@@ -1811,18 +1824,11 @@
                     status: status,
                     type: type,
                     req: req,
-                    links: {
-                        ref: refLink,
-                        post: postLink,
-                        fc: fcLink
-                    }
+                    links: { ref: refLink, post: postLink, fc: fcLink }
                 };
                 
-                // For review cases, map sentiment gracefully
                 if (state.importTarget === 'review') {
                     entry.sentiment = (sentimentVal && sentimentVal.toLowerCase().includes('neg')) ? 'Negative' : 'Positive';
-                    
-                    // Fallback to gracefully handle if they accidentally shifted columns into type/related
                     if (["Positive", "Negative"].includes(entry.type)) {
                         entry.sentiment = entry.type;
                         entry.type = related !== '-' ? related : 'Google Review';
@@ -1832,9 +1838,7 @@
                 }
                 
                 state.cases[state.importTarget].unshift(entry);
-                addedCount++;
                 
-                // Add any new dropdown values to state automatically
                 if (entry.agent !== '-' && !state.agents.includes(entry.agent)) state.agents.push(entry.agent);
                 if (entry.req !== '-' && !state.requestTypes.includes(entry.req)) state.requestTypes.push(entry.req);
                 if (entry.action !== '-' && !state.actions.includes(entry.action)) state.actions.push(entry.action);
@@ -1842,17 +1846,11 @@
                 if (entry.type && entry.type !== '-' && !state.interactionTypes.includes(entry.type) && state.importTarget === 'fbig') state.interactionTypes.push(entry.type);
             });
 
-            populateDropdowns();
-            populateAdvFilters();
+            window.saveState();
             renderAllTables();
-            
-            if (document.getElementById('page-weekly').classList.contains('active')) renderWeeklyReview();
-            if (document.getElementById('page-monthly').classList.contains('active')) renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
-            
             closePanel();
         });
 
-        // Status & Sentiment Selectors
         document.querySelectorAll('#form-status .status-btn').forEach(b => {
             b.addEventListener('click', (e) => {
                 document.querySelectorAll('#form-status .status-btn').forEach(btn => btn.classList.remove('selected'));
@@ -1871,7 +1869,6 @@
 
         document.getElementById('form-agent').addEventListener('change', (e) => e.target.classList.remove('error'));
 
-        // Save
         document.getElementById('btn-save').addEventListener('click', () => {
             const agent = document.getElementById('form-agent');
             const req = document.getElementById('form-req');
@@ -1901,24 +1898,17 @@
             }
 
             if (state.editingId) {
-                // Update
                 const idx = state.cases[state.editingKey].findIndex(c => c.id == state.editingId);
                 if (idx > -1) state.cases[state.editingKey][idx] = entry;
             } else {
-                // Add new
                 state.cases[state.activePanelType].unshift(entry);
             }
             
+            window.saveState();
             renderAllTables();
-            
-            // Refresh Analysis pages if they are active
-            if (document.getElementById('page-weekly').classList.contains('active')) renderWeeklyReview();
-            if (document.getElementById('page-monthly').classList.contains('active')) renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
-            
             closePanel();
         });
 
-        // Advanced Filter Apply
         document.getElementById('btn-apply-adv').addEventListener('click', () => {
             state.advFilters.startDate = document.getElementById('adv-start').value;
             state.advFilters.endDate = document.getElementById('adv-end').value;
@@ -1934,7 +1924,6 @@
             state.advFilters.statuses = getCheckedValues('statuses');
             state.advFilters.sentiments = getCheckedValues('sentiments');
             
-            // Update Headers
             document.querySelectorAll('.multi-select-wrapper').forEach(wrapper => {
                 const header = wrapper.querySelector('.ms-header');
                 const list = wrapper.querySelector('.checkbox-list');
@@ -1958,7 +1947,6 @@
             state.advFilters = { startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [], sentiments: [] };
             renderAllTables();
         });
-
 
         // --- EDIT DATA PAGE ---
         const cntMap = {
@@ -1984,12 +1972,11 @@
             let dispArr = arr;
             if (filterStr) dispArr = arr.filter(i => i.toLowerCase().includes(filterStr.toLowerCase()));
             
-            // Limit Request Types to prevent massive dom
             let limit = dispArr.length;
             if(key === 'requestTypes' && !filterStr && limit > 8) limit = 8;
             
             for(let i=0; i<limit; i++) {
-                c.innerHTML += `<div class="edit-item"><span>${dispArr[i]}</span><button class="btn-icon" onclick="delEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}')">${svgDel}</button></div>`;
+                c.innerHTML += `<div class="edit-item"><span>${dispArr[i]}</span><button class="btn-icon" onclick="window.delEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}')">${svgDel}</button></div>`;
             }
             if(key === 'requestTypes' && limit < dispArr.length) {
                 c.innerHTML += `<div class="edit-item" style="justify-content:center;color:var(--text-muted);"><em>... and ${dispArr.length - limit} more. Search to find.</em></div>`;
@@ -2002,15 +1989,14 @@
             if(val && !state[key].includes(val)) {
                 state[key].push(val);
                 inp.value = '';
-                populateDropdowns();
-                populateAdvFilters();
+                window.saveState();
             }
         };
 
         window.delEditItem = function(key, val) {
             state[key] = state[key].filter(i => i !== val);
-            populateDropdowns();
-            populateAdvFilters();
+            window.saveState();
+            renderEditLists();
         };
 
         ['inp-add-agent', 'inp-add-related', 'inp-add-action', 'inp-add-req', 'inp-add-status', 'inp-add-interaction'].forEach(id => {
@@ -2022,7 +2008,6 @@
             }
         });
         
-        // --- DATE NAVIGATION LISTENERS ---
         function setupDateControlListeners() {
             document.getElementById('btn-wk-prev').addEventListener('click', () => {
                 state.viewState.weeklyEndMonday = addDays(state.viewState.weeklyEndMonday, -7);
@@ -2047,12 +2032,9 @@
             });
         }
 
-
-        // --- WEEKLY REVIEW ---
         function renderWeeklyReview() {
             if(!state.viewState.weeklyEndMonday) state.viewState.weeklyEndMonday = getMonday(new Date().toISOString().split('T')[0]);
             
-            // Build 6-week labels based on weeklyEndMonday
             const weeks = [];
             for(let i=5; i>=0; i--) {
                 weeks.push(addDays(state.viewState.weeklyEndMonday, -i*7));
@@ -2061,13 +2043,11 @@
             const weekLabels = weeks.map(w => new Date(w + 'T12:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'}));
             document.getElementById('wk-range-label').textContent = `${weekLabels[0]} – ${weekLabels[5]}`;
             
-            // Initialize structures
             const relData = {}; state.relatedTo.forEach(r => relData[r] = [0,0,0,0,0,0]);
             const actData = {}; state.actions.forEach(a => actData[a] = [0,0,0,0,0,0]);
             const weeklyTotals = [0,0,0,0,0,0];
             const latestReqs = {};
             
-            // Combine all cases and calculate
             const allCases = [...state.cases.fbig, ...state.cases.reddit, ...state.cases.review];
             
             allCases.forEach(c => {
@@ -2077,7 +2057,6 @@
                     weeklyTotals[wIdx]++;
                     if (c.related && relData[c.related]) relData[c.related][wIdx]++;
                     if (c.action && actData[c.action]) actData[c.action][wIdx]++;
-                    // Top requests for the most recent week in the sequence
                     if (wIdx === 5 && c.req) {
                         latestReqs[c.req] = (latestReqs[c.req] || 0) + 1;
                     }
@@ -2086,7 +2065,6 @@
 
             const totalTickets = weeklyTotals.reduce((a,b)=>a+b, 0);
 
-            // Stats
             document.getElementById('wk-stats').innerHTML = `
                 <div class="stat-card"><h3>Total Weeks</h3><div class="val">6</div></div>
                 <div class="stat-card"><h3>Total Tickets</h3><div class="val">${totalTickets}</div></div>
@@ -2094,7 +2072,6 @@
                 <div class="stat-card"><h3>Last Updated</h3><div class="val" style="font-size:18px;">${weekLabels[5]}</div></div>
             `;
 
-            // Tables
             let html = `
                 <table class="da-table" style="margin-bottom:20px;">
                     <tr><th>Ticket Related</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
@@ -2121,7 +2098,6 @@
             `;
             document.getElementById('wk-tables').innerHTML = html;
 
-            // Charts
             destroyChart('wk1'); destroyChart('wk2'); destroyChart('wk3');
             
             charts['wk1'] = new Chart(document.getElementById('wk-chart1'), {
@@ -2177,7 +2153,6 @@
                 }
             });
 
-            // Latest / Top requests processing
             const sortedReqs = Object.entries(latestReqs).sort((a,b) => b[1] - a[1]);
             const top5 = sortedReqs.slice(0, 5);
             
@@ -2199,7 +2174,6 @@
             });
         }
 
-        // --- MONTHLY REVIEW ---
         function renderMonthlyReview(tab) {
             const targetD = new Date(state.viewState.monthlyDate + 'T12:00:00');
             const targetMonth = targetD.getMonth();
@@ -2207,7 +2181,6 @@
             
             document.getElementById('mo-range-label').textContent = targetD.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
 
-            // Special Case: REVIEW TAB
             if (tab === 'review') {
                 let targetCases = state.cases.review.map(c=>({...c, _source:'review'}));
                 targetCases = targetCases.filter(c => {
@@ -2266,7 +2239,7 @@
                     </div>
                 `;
                 document.getElementById('mo-container').innerHTML = html;
-                return; // Early return for Review tab
+                return;
             }
 
             let targetCases = [];
@@ -2280,13 +2253,11 @@
                 targetCases = state.cases.reddit.map(c=>({...c, _source:'reddit'}));
             }
 
-            // Filter strictly to the chosen month
             targetCases = targetCases.filter(c => {
                 const cd = new Date(c.date + 'T12:00:00');
                 return cd.getMonth() === targetMonth && cd.getFullYear() === targetYear;
             });
 
-            // 7-day buckets starting from the 1st
             const monthShort = targetD.toLocaleDateString('en-US', {month: 'short'});
             const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
             const bucketStarts = [1, 8, 15, 22, 29].filter(d => d <= daysInMonth);
@@ -2307,7 +2278,6 @@
                 else if(day >= 15) wIdx = 2;
                 else if(day >= 8) wIdx = 1;
 
-                // Safe clamp in case month is short (e.g. Feb 28 days)
                 if (wIdx >= bucketStarts.length) wIdx = bucketStarts.length - 1;
 
                 weeklyTotals[wIdx]++;
@@ -2341,7 +2311,6 @@
                 html += `</div>`;
             }
 
-            // Build individual tables
             const isSingleCol = bucketStarts.length === 1;
 
             let tbl1 = `<table class="da-table" ${!isSingleCol ? 'style="margin-bottom:20px;"' : ''}>
@@ -2359,7 +2328,6 @@
                 <tr class="total-row"><td>Weekly Handled Tickets</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr>
             </table>`;
 
-            // Layout based on columns
             if (isSingleCol) {
                 html += `<div style="display:flex; gap:24px; margin-bottom:24px; align-items: flex-start;">
                             <div class="da-section" style="flex:1; margin-bottom:0;">${tbl1}</div>
@@ -2411,7 +2379,6 @@
             let headers = [];
             let filename = 'export.csv';
 
-            // Function to filter exactly like rendering
             const getFiltered = (dataKey) => {
                 const searchInput = container.querySelector('.table-search');
                 const search = searchInput ? searchInput.value.toLowerCase() : '';
@@ -2490,7 +2457,7 @@
                         cols.forEach(c => rowData.push('"' + c.innerText.replace(/"/g, '""') + '"'));
                         csvStr += rowData.join(',') + '\n';
                     });
-                    csvStr += '\n'; // Spacer between tables
+                    csvStr += '\n';
                 });
                 
                 filename = activePage === 'page-weekly' ? 'weekly_review.csv' : 'monthly_review.csv';
