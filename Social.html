@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="favicon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SM Tracker</title>
-    <!-- Chart.js from cdnjs -->
+    <link rel="icon" type="image/png" href="2132948.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         /* CSS Reset & Variables (Light Mode Default) */
@@ -576,7 +575,6 @@
 
     <div class="app-container">
         
-        <!-- Sidebar -->
         <div class="sidebar">
             <div class="logo-container">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple-main)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -600,10 +598,8 @@
             <div class="nav-item nav-link" data-target="page-settings">Settings</div>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content">
             
-            <!-- PAGE 1: FB/IG CASES -->
             <div id="page-fbig" class="page-view active">
                 <div class="top-bar">
                     <div class="page-title"><h1>FB/IG Cases</h1></div>
@@ -626,7 +622,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Type of Interaction</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type of Interaction</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -636,7 +632,6 @@
                 </div>
             </div>
 
-            <!-- PAGE 2: REDDIT CASES -->
             <div id="page-reddit" class="page-view">
                 <div class="top-bar">
                     <div class="page-title"><h1>Reddit Cases</h1></div>
@@ -668,7 +663,6 @@
                 </div>
             </div>
 
-            <!-- PAGE 3: REVIEW CASES -->
             <div id="page-review" class="page-view">
                 <div class="top-bar">
                     <div class="page-title"><h1>Review Cases</h1></div>
@@ -689,7 +683,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -699,7 +693,6 @@
                 </div>
             </div>
 
-            <!-- PAGE PENDING CASES -->
             <div id="page-pending" class="page-view">
                 <div class="top-bar">
                     <div class="page-title"><h1>All Pending Cases</h1><span class="entry-count">· 0 entries</span></div>
@@ -711,7 +704,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Source</th><th>Agent Name</th><th>Type / Related</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Source</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -721,7 +714,6 @@
                 </div>
             </div>
 
-            <!-- PAGE 4: WEEKLY REVIEW -->
             <div id="page-weekly" class="page-view" style="background: var(--bg-sidebar);">
                 <div class="top-bar" style="background: var(--bg-main);">
                     <div class="page-title"><h1>Weekly Review</h1></div>
@@ -742,7 +734,6 @@
                 </div>
             </div>
 
-            <!-- PAGE 5: MONTHLY REVIEW -->
             <div id="page-monthly" class="page-view" style="background: var(--bg-sidebar);">
                 <div class="top-bar" style="background: var(--bg-main); border-bottom: none;">
                     <div class="page-title"><h1>Monthly Review</h1></div>
@@ -761,11 +752,9 @@
                     <div class="tab" data-tab="review">Reviews</div>
                 </div>
                 <div class="da-container" id="mo-container">
-                    <!-- Populated by JS -->
-                </div>
+                    </div>
             </div>
 
-            <!-- PAGE 6: EDIT DATA -->
             <div id="page-edit" class="page-view" style="background: var(--bg-sidebar);">
                 <div class="top-bar" style="background: var(--bg-main);">
                     <div class="page-title">
@@ -834,7 +823,6 @@
                 </div>
             </div>
 
-            <!-- PAGE 7: SETTINGS -->
             <div id="page-settings" class="page-view" style="background: var(--bg-sidebar);">
                 <div class="top-bar" style="background: var(--bg-main);">
                     <div class="page-title">
@@ -860,10 +848,8 @@
                 </div>
             </div>
 
-            <!-- Overlay -->
             <div class="overlay" id="overlay"></div>
 
-            <!-- Delete Custom Modal -->
             <div class="delete-modal" id="delete-modal">
                 <h3 style="margin-bottom: 12px; font-size: 16px;">Delete Entry</h3>
                 <p style="color: var(--text-muted); margin-bottom: 24px;">Are you sure you want to delete this case? This action cannot be undone.</p>
@@ -873,7 +859,6 @@
                 </div>
             </div>
 
-            <!-- Advanced Filter Modal -->
             <div class="filter-modal" id="filter-modal">
                 <div class="panel-header">
                     <div class="panel-title">Advanced Filters</div>
@@ -956,7 +941,6 @@
                 </div>
             </div>
 
-            <!-- Import Data Modal -->
             <div class="delete-modal" id="import-modal" style="width: 500px; text-align: left; padding: 20px;">
                 <div class="panel-header" style="padding:0; border:none; margin-bottom:16px;">
                     <h3 style="margin: 0; font-size: 16px;">Import Data</h3>
@@ -978,7 +962,6 @@
                 </div>
             </div>
 
-            <!-- Slide-in Panel -->
             <div class="side-panel" id="side-panel">
                 <div class="panel-header">
                     <div class="panel-title" id="panel-title">New Entry</div>
@@ -1033,8 +1016,7 @@
                     <div class="form-group">
                         <label>Status</label>
                         <div class="status-selector" id="form-status">
-                            <!-- Populated dynamically -->
-                        </div>
+                            </div>
                     </div>
 
                     <div class="form-group">
@@ -1065,7 +1047,6 @@
         </div>
     </div>
 
-    <!-- Supabase Imports and Module Logic -->
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -1174,9 +1155,6 @@
                 if(!e.target.closest('.multi-select-wrapper')) {
                     document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
                 }
-                if(!e.target.closest('.row-dropdown-wrapper')) {
-                    document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('active'));
-                }
             });
 
             // Initialize Data from Supabase
@@ -1211,14 +1189,6 @@
             };
             loadSupabaseData();
         }
-
-        window.toggleRowDropdown = function(e) {
-            e.stopPropagation();
-            const dropdown = e.currentTarget.nextElementSibling;
-            const isActive = dropdown.classList.contains('active');
-            document.querySelectorAll('.row-dropdown').forEach(d => d.classList.remove('active'));
-            if (!isActive) dropdown.classList.add('active');
-        };
 
         function setupAutocomplete(inputId, listId, dataArrayKey) {
             const inp = document.getElementById(inputId);
@@ -1539,18 +1509,20 @@
                 let colsHtml = `<td class="col-date">${formatDate(c.date)}</td><td class="col-name">${c.agent}</td>`;
                 
                 if (dataKey === 'fbig') {
-                    colsHtml += `<td><span class="badge badge-type">${c.type}</span></td>
-                                 <td><span class="badge badge-req">${c.req}</span></td>
-                                 <td>${c.action}</td>`;
+                    colsHtml += `<td>${c.related || '-'}</td>
+                                 <td><span class="badge badge-type">${c.type || '-'}</span></td>
+                                 <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                                 <td>${c.action || '-'}</td>`;
                 } else if (dataKey === 'reddit') {
-                    colsHtml += `<td>${c.related}</td>
-                                 <td><span class="badge badge-req">${c.req}</span></td>
-                                 <td>${c.action}</td>`;
+                    colsHtml += `<td>${c.related || '-'}</td>
+                                 <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                                 <td>${c.action || '-'}</td>`;
                 } else if (dataKey === 'review') {
                     const sentClass = c.sentiment === 'Positive' ? 'badge-positive' : 'badge-negative';
-                    colsHtml += `<td><span class="badge badge-type">${c.type}</span></td>
+                    colsHtml += `<td>${c.related || '-'}</td>
+                                 <td><span class="badge badge-type">${c.type || '-'}</span></td>
                                  <td><span class="badge ${sentClass}">${c.sentiment}</span></td>
-                                 <td>${c.action}</td>`;
+                                 <td>${c.action || '-'}</td>`;
                 }
 
                 colsHtml += `<td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
@@ -1600,14 +1572,14 @@
                 if(c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
                 if(c.links.ref) linksHtml += `<a href="${c.links.ref}" target="_blank">Ref${svgExt}</a>`;
 
-                let combinedTypeRelated = c.type ? c.type : c.related;
                 let colsHtml = `
                     <td class="col-date">${formatDate(c.date)}</td>
                     <td><span class="badge badge-default">${c._sourceName}</span></td>
                     <td class="col-name">${c.agent}</td>
-                    <td>${combinedTypeRelated}</td>
-                    <td><span class="badge badge-req">${c.req}</span></td>
-                    <td>${c.action}</td>
+                    <td>${c.related || '-'}</td>
+                    <td><span class="badge badge-type">${c.type || '-'}</span></td>
+                    <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                    <td>${c.action || '-'}</td>
                     <td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
                     <td class="links-col">${linksHtml}</td>
                     <td style="text-align:right;">
@@ -1991,6 +1963,7 @@
                 state[key].push(val);
                 inp.value = '';
                 window.saveState();
+                renderEditLists();
             }
         };
 
@@ -2404,10 +2377,10 @@
             };
 
             if (activePage === 'page-fbig') {
-                headers = ['Date', 'Agent Name', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
                 filename = 'fbig_cases.csv';
                 data = getFiltered('fbig').map(c => [
-                    formatDate(c.date), c.agent, c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-reddit') {
                 headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Post / Thread Link', 'Reference Link'];
@@ -2416,13 +2389,13 @@
                     formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-review') {
-                headers = ['Date', 'Agent Name', 'Type', 'Sentiment', 'Action Taken', 'Status', 'Reference Link'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Status', 'Reference Link'];
                 filename = 'review_cases.csv';
                 data = getFiltered('review').map(c => [
-                    formatDate(c.date), c.agent, c.type, c.sentiment, c.action, c.status, c.links.ref || ''
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.status, c.links.ref || ''
                 ]);
             } else if (activePage === 'page-pending') {
-                headers = ['Date', 'Source', 'Agent Name', 'Type / Related', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
+                headers = ['Date', 'Source', 'Agent Name', 'Related To', 'Type', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
                 filename = 'pending_cases.csv';
                 
                 const searchInput = container.querySelector('.table-search');
@@ -2443,7 +2416,7 @@
                 
                 filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
                 data = filtered.map(c => [
-                    formatDate(c.date), c._sourceName, c.agent, c.type || c.related, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
+                    formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-weekly' || activePage === 'page-monthly') {
                 let csvStr = '';
