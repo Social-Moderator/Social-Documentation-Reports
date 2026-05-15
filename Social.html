@@ -1138,8 +1138,21 @@
                 renderEditList('list-req', state.requestTypes, 'requestTypes', e.target.value);
             });
             
+            // LOCALSTORAGE THEME LOGIC
+            const savedTheme = localStorage.getItem('sm_tracker_theme') || 'light';
+            document.getElementById('setting-theme').value = savedTheme;
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                Chart.defaults.color = '#8B949E';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                Chart.defaults.color = '#888888';
+            }
+            
             document.getElementById('setting-theme').addEventListener('change', (e) => {
-                if (e.target.value === 'dark') {
+                const theme = e.target.value;
+                localStorage.setItem('sm_tracker_theme', theme);
+                if (theme === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
                     Chart.defaults.color = '#8B949E';
                 } else {
@@ -1150,7 +1163,6 @@
                     if (charts[id]) charts[id].update();
                 });
             });
-            Chart.defaults.color = '#888888';
             
             document.addEventListener('click', (e) => {
                 if(!e.target.closest('.multi-select-wrapper')) {
@@ -1158,10 +1170,25 @@
                 }
             });
 
+            // Helper to clean duplicate arrays on load (case insensitive)
+            const dedupe = (arr) => {
+                const seen = new Set();
+                const cleaned = [];
+                arr.forEach(item => {
+                    if (!item) return;
+                    const trimmed = item.trim();
+                    const lower = trimmed.toLowerCase();
+                    if (!seen.has(lower)) {
+                        seen.add(lower);
+                        cleaned.push(trimmed);
+                    }
+                });
+                return cleaned;
+            };
+
             // Initialize Relational Data from Supabase
             const loadSupabaseData = async () => {
                 try {
-                    // Fetch settings and cases in parallel
                     const [settingsRes, casesRes] = await Promise.all([
                         supabase.from('settings').select('*').eq('id', 'main').single(),
                         supabase.from('cases').select('*')
@@ -1172,14 +1199,16 @@
                     }
                     if (settingsRes.data) {
                         const dbData = settingsRes.data;
-                        state.agents = dbData.agents || state.agents;
-                        state.relatedTo = dbData.related_to || state.relatedTo;
-                        state.actions = dbData.actions || state.actions;
-                        state.requestTypes = dbData.request_types || state.requestTypes;
-                        state.statuses = dbData.statuses || state.statuses;
-                        state.interactionTypes = dbData.interaction_types || state.interactionTypes;
+                        state.agents = dedupe(dbData.agents || state.agents);
+                        state.relatedTo = dedupe(dbData.related_to || state.relatedTo);
+                        state.actions = dedupe(dbData.actions || state.actions);
+                        state.requestTypes = dedupe(dbData.request_types || state.requestTypes);
+                        state.statuses = dedupe(dbData.statuses || state.statuses);
+                        state.interactionTypes = dedupe(dbData.interaction_types || state.interactionTypes);
+                        
+                        // Silently save cleaned version back to Supabase to permanently fix trailing spaces
+                        window.saveSettingsToSupabase();
                     } else {
-                        // First time setup: push default arrays to Supabase
                         window.saveSettingsToSupabase();
                     }
                     
@@ -1763,6 +1792,16 @@
         document.getElementById('btn-close-import').addEventListener('click', closePanel);
         document.getElementById('btn-cancel-import').addEventListener('click', closePanel);
 
+        // Helper to avoid duplicate dropdown additions during import
+        const addIfUniqueAndReturn = (arr, val) => {
+            if (!val || val === '-') return val;
+            const trimmed = val.trim();
+            const existing = arr.find(i => i.toLowerCase() === trimmed.toLowerCase());
+            if (existing) return existing;
+            arr.push(trimmed);
+            return trimmed;
+        };
+
         document.getElementById('btn-confirm-import').addEventListener('click', async () => {
             const raw = document.getElementById('import-textarea').value.trim();
             if (!raw) return closePanel();
@@ -1829,6 +1868,13 @@
                 if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
                 if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
 
+                // Smart Deduplication checking
+                agent = addIfUniqueAndReturn(state.agents, agent);
+                related = addIfUniqueAndReturn(state.relatedTo, related);
+                action = addIfUniqueAndReturn(state.actions, action);
+                req = addIfUniqueAndReturn(state.requestTypes, req);
+                if (state.importTarget === 'fbig') type = addIfUniqueAndReturn(state.interactionTypes, type);
+
                 const entry = {
                     id: Date.now() + Math.random().toString(), // Generate safe string ID
                     date: dateVal,
@@ -1869,13 +1915,6 @@
                     link_post: entry.links.post || null,
                     link_ref: entry.links.ref || null
                 });
-                
-                // Track new unique values for dropdowns
-                if (entry.agent !== '-' && !state.agents.includes(entry.agent)) state.agents.push(entry.agent);
-                if (entry.req !== '-' && !state.requestTypes.includes(entry.req)) state.requestTypes.push(entry.req);
-                if (entry.action !== '-' && !state.actions.includes(entry.action)) state.actions.push(entry.action);
-                if (entry.related && entry.related !== '-' && !state.relatedTo.includes(entry.related)) state.relatedTo.push(entry.related);
-                if (entry.type && entry.type !== '-' && !state.interactionTypes.includes(entry.type) && state.importTarget === 'fbig') state.interactionTypes.push(entry.type);
             });
 
             // Save records to relational database
@@ -2049,11 +2088,16 @@
         window.addEditItem = function(key, inpId) {
             const inp = document.getElementById(inpId);
             const val = inp.value.trim();
-            if(val && !state[key].includes(val)) {
+            const valLower = val.toLowerCase();
+            
+            // Check for case-insensitive duplicate before adding
+            if(val && !state[key].some(i => i.toLowerCase() === valLower)) {
                 state[key].push(val);
                 inp.value = '';
                 window.saveSettingsToSupabase();
                 renderEditLists();
+            } else if (val) {
+                inp.value = '';
             }
         };
 
@@ -2107,6 +2151,11 @@
             const weekLabels = weeks.map(w => new Date(w + 'T12:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'}));
             document.getElementById('wk-range-label').textContent = `${weekLabels[0]} – ${weekLabels[5]}`;
             
+            // Build Case-Insensitive maps to merge data correctly
+            const relMap = {}; state.relatedTo.forEach(r => relMap[r.trim().toLowerCase()] = r);
+            const actMap = {}; state.actions.forEach(a => actMap[a.trim().toLowerCase()] = a);
+            const reqMap = {}; state.requestTypes.forEach(r => reqMap[r.trim().toLowerCase()] = r);
+
             const relData = {}; state.relatedTo.forEach(r => relData[r] = [0,0,0,0,0,0]);
             const actData = {}; state.actions.forEach(a => actData[a] = [0,0,0,0,0,0]);
             const weeklyTotals = [0,0,0,0,0,0];
@@ -2119,10 +2168,24 @@
                 const wIdx = weeks.indexOf(wKey);
                 if (wIdx > -1) {
                     weeklyTotals[wIdx]++;
-                    if (c.related && relData[c.related]) relData[c.related][wIdx]++;
-                    if (c.action && actData[c.action]) actData[c.action][wIdx]++;
+                    
+                    let mRel = c.related ? c.related.trim() : null;
+                    if (mRel) {
+                        mRel = relMap[mRel.toLowerCase()] || mRel;
+                        if (!relData[mRel]) relData[mRel] = [0,0,0,0,0,0];
+                        relData[mRel][wIdx]++;
+                    }
+                    
+                    let mAct = c.action ? c.action.trim() : null;
+                    if (mAct) {
+                        mAct = actMap[mAct.toLowerCase()] || mAct;
+                        if (!actData[mAct]) actData[mAct] = [0,0,0,0,0,0];
+                        actData[mAct][wIdx]++;
+                    }
+                    
                     if (wIdx === 5 && c.req) {
-                        latestReqs[c.req] = (latestReqs[c.req] || 0) + 1;
+                        const mReq = reqMap[c.req.trim().toLowerCase()] || c.req;
+                        latestReqs[mReq] = (latestReqs[mReq] || 0) + 1;
                     }
                 }
             });
@@ -2327,6 +2390,12 @@
             const bucketStarts = [1, 8, 15, 22, 29].filter(d => d <= daysInMonth);
             const weekLabels = bucketStarts.map(d => `${d} ${monthShort}`);
 
+            // Build Case-Insensitive maps
+            const relMap = {}; state.relatedTo.forEach(r => relMap[r.trim().toLowerCase()] = r);
+            const actMap = {}; state.actions.forEach(a => actMap[a.trim().toLowerCase()] = a);
+            const reqMap = {}; state.requestTypes.forEach(r => reqMap[r.trim().toLowerCase()] = r);
+            const chanMap = {}; state.interactionTypes.forEach(t => chanMap[t.trim().toLowerCase()] = t);
+
             const relData = {}; state.relatedTo.forEach(r => relData[r] = new Array(bucketStarts.length).fill(0));
             const actData = {}; state.actions.forEach(a => actData[a] = new Array(bucketStarts.length).fill(0));
             const weeklyTotals = new Array(bucketStarts.length).fill(0);
@@ -2345,11 +2414,30 @@
                 if (wIdx >= bucketStarts.length) wIdx = bucketStarts.length - 1;
 
                 weeklyTotals[wIdx]++;
-                if (c.related && relData[c.related]) relData[c.related][wIdx]++;
-                if (c.action && actData[c.action]) actData[c.action][wIdx]++;
-                if (c.req) topReqsMap[c.req] = (topReqsMap[c.req] || 0) + 1;
                 
-                if (c.type) channelsMap[c.type] = (channelsMap[c.type] || 0) + 1;
+                let mRel = c.related ? c.related.trim() : null;
+                if (mRel) {
+                    mRel = relMap[mRel.toLowerCase()] || mRel;
+                    if (!relData[mRel]) relData[mRel] = new Array(bucketStarts.length).fill(0);
+                    relData[mRel][wIdx]++;
+                }
+                
+                let mAct = c.action ? c.action.trim() : null;
+                if (mAct) {
+                    mAct = actMap[mAct.toLowerCase()] || mAct;
+                    if (!actData[mAct]) actData[mAct] = new Array(bucketStarts.length).fill(0);
+                    actData[mAct][wIdx]++;
+                }
+                
+                if (c.req) {
+                    const mReq = reqMap[c.req.trim().toLowerCase()] || c.req;
+                    topReqsMap[mReq] = (topReqsMap[mReq] || 0) + 1;
+                }
+                
+                if (c.type) {
+                    const mChan = chanMap[c.type.trim().toLowerCase()] || c.type;
+                    channelsMap[mChan] = (channelsMap[mChan] || 0) + 1;
+                }
                 if (tab === 'reddit') channelsMap['Reddit Submissions'] = (channelsMap['Reddit Submissions'] || 0) + 1;
             });
 
