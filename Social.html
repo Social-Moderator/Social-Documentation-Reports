@@ -1047,6 +1047,7 @@
         </div>
     </div>
 
+    <!-- Supabase Imports and Module Logic -->
     <script type="module">
         import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
@@ -1087,22 +1088,22 @@
 
         let charts = {};
 
-        // --- SUPABASE SYNC UTILS ---
-        window.saveState = async function() {
-            const stateToSave = {
+        // --- RELATIONAL SUPABASE SYNC UTILS ---
+        window.saveSettingsToSupabase = async function() {
+            const settingsData = {
+                id: 'main',
                 agents: state.agents,
-                relatedTo: state.relatedTo,
+                related_to: state.relatedTo,
                 actions: state.actions,
-                requestTypes: state.requestTypes,
+                request_types: state.requestTypes,
                 statuses: state.statuses,
-                interactionTypes: state.interactionTypes,
-                cases: state.cases,
+                interaction_types: state.interactionTypes
             };
             try {
-                const { error } = await supabase.from('app_data').upsert({ id: 'main', data: stateToSave });
+                const { error } = await supabase.from('settings').upsert(settingsData);
                 if (error) throw error;
             } catch (e) {
-                console.error("Error saving state to Supabase:", e);
+                console.error("Error saving settings to Supabase:", e);
             }
         };
 
@@ -1157,24 +1158,57 @@
                 }
             });
 
-            // Initialize Data from Supabase
+            // Initialize Relational Data from Supabase
             const loadSupabaseData = async () => {
                 try {
-                    const { data, error } = await supabase.from('app_data').select('data').eq('id', 'main').single();
-                    if (error) {
-                        console.warn("Supabase fetch warning (might not exist yet):", error.message);
+                    // Fetch settings and cases in parallel
+                    const [settingsRes, casesRes] = await Promise.all([
+                        supabase.from('settings').select('*').eq('id', 'main').single(),
+                        supabase.from('cases').select('*')
+                    ]);
+
+                    if (settingsRes.error && settingsRes.error.code !== 'PGRST116') {
+                        console.warn("Settings fetch warning:", settingsRes.error.message);
                     }
-                    if (data && data.data) {
-                        const dbData = data.data;
+                    if (settingsRes.data) {
+                        const dbData = settingsRes.data;
                         state.agents = dbData.agents || state.agents;
-                        state.relatedTo = dbData.relatedTo || state.relatedTo;
+                        state.relatedTo = dbData.related_to || state.relatedTo;
                         state.actions = dbData.actions || state.actions;
-                        state.requestTypes = dbData.requestTypes || state.requestTypes;
+                        state.requestTypes = dbData.request_types || state.requestTypes;
                         state.statuses = dbData.statuses || state.statuses;
-                        state.interactionTypes = dbData.interactionTypes || state.interactionTypes;
-                        state.cases = dbData.cases || state.cases;
+                        state.interactionTypes = dbData.interaction_types || state.interactionTypes;
                     } else {
-                        window.saveState();
+                        // First time setup: push default arrays to Supabase
+                        window.saveSettingsToSupabase();
+                    }
+                    
+                    if (casesRes.error) {
+                        console.error("Cases fetch error:", casesRes.error.message);
+                    }
+                    if (casesRes.data) {
+                        state.cases = { fbig: [], reddit: [], review: [] };
+                        casesRes.data.forEach(c => {
+                            const mappedCase = {
+                                id: c.id,
+                                date: c.date,
+                                agent: c.agent,
+                                related: c.related,
+                                type: c.type,
+                                sentiment: c.sentiment,
+                                action: c.action,
+                                req: c.req,
+                                status: c.status,
+                                links: {
+                                    fc: c.link_fc,
+                                    post: c.link_post,
+                                    ref: c.link_ref
+                                }
+                            };
+                            if (c.source && state.cases[c.source]) {
+                                state.cases[c.source].push(mappedCase);
+                            }
+                        });
                     }
                     
                     populateDropdowns();
@@ -1404,7 +1438,7 @@
         // --- EDIT AND DELETE FUNCTIONS ---
         let pendingDelete = null;
 
-        window.deleteCase = function(dataKey, id) {
+        window.deleteCase = async function(dataKey, id) {
             pendingDelete = { dataKey, id };
             document.getElementById('overlay').classList.add('active');
             document.getElementById('delete-modal').classList.add('active');
@@ -1416,10 +1450,17 @@
             document.getElementById('overlay').classList.remove('active');
         });
 
-        document.getElementById('btn-confirm-del').addEventListener('click', () => {
+        document.getElementById('btn-confirm-del').addEventListener('click', async () => {
             if(pendingDelete) {
+                // Update local state
                 state.cases[pendingDelete.dataKey] = state.cases[pendingDelete.dataKey].filter(c => c.id != pendingDelete.id);
-                window.saveState();
+                
+                // Update Supabase
+                try {
+                    await supabase.from('cases').delete().eq('id', pendingDelete.id.toString());
+                } catch (e) {
+                    console.error("Delete error:", e);
+                }
                 renderAllTables();
             }
             pendingDelete = null;
@@ -1463,51 +1504,71 @@
             document.getElementById('form-link-ref').value = caseData.links.ref || '';
         };
 
-        // --- TABLE RENDERING ---
-        function renderTable(pageId, dataKey) {
+        // --- TABLE RENDERING & FILTERING (DRY IMPLEMENTATION) ---
+
+        // Helper function to return globally filtered cases array for any source
+        function getFilteredCases(dataKey, isPendingView = false) {
+            const pageId = isPendingView ? 'page-pending' : 'page-' + dataKey;
             const container = document.getElementById(pageId);
-            if (!container) return;
-            const tbody = container.querySelector('.table-body');
-            if (!tbody) return;
+            if (!container) return [];
             
             const searchInput = container.querySelector('.table-search');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
             const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
             
-            let filtered = state.cases[dataKey].filter(c => {
+            let casesToFilter = [];
+            if (isPendingView) {
+                casesToFilter = [
+                    ...state.cases.fbig.map(c => ({...c, _source: 'fbig', _sourceName: 'FB/IG'})),
+                    ...state.cases.reddit.map(c => ({...c, _source: 'reddit', _sourceName: 'Reddit'})),
+                    ...state.cases.review.map(c => ({...c, _source: 'review', _sourceName: 'Review'}))
+                ];
+            } else {
+                casesToFilter = state.cases[dataKey].map(c => ({...c, _source: dataKey}));
+            }
+
+            let filtered = casesToFilter.filter(c => {
                 let matchesSearch = c.agent.toLowerCase().includes(search) || 
                                     (c.type && c.type.toLowerCase().includes(search)) ||
                                     (c.req && c.req.toLowerCase().includes(search));
-                let matchesChip = true;
-                if (activeChip !== 'All') {
-                    if (dataKey === 'fbig' || dataKey === 'review') {
-                        matchesChip = c.type === activeChip || c.sentiment === activeChip;
-                    } else if (dataKey === 'reddit') {
-                        matchesChip = c.related === activeChip;
+                
+                if (isPendingView) {
+                    if (!c.status.toLowerCase().includes('pending')) return false;
+                } else {
+                    if (activeChip !== 'All') {
+                        if (dataKey === 'fbig' || dataKey === 'review') {
+                            if (c.type !== activeChip && c.sentiment !== activeChip) return false;
+                        } else if (dataKey === 'reddit') {
+                            if (c.related !== activeChip) return false;
+                        }
                     }
                 }
-                return matchesSearch && matchesChip && applyAdvFilters(c);
+                return matchesSearch && applyAdvFilters(c);
             });
 
             filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            return filtered;
+        }
 
-            const entryCountEl = container.querySelector('.entry-count');
-            if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
+        // Helper function to create HTML for a single table row
+        function generateTableRowHtml(c, isPendingView) {
+            let linksHtml = '';
+            if(c.links.fc) linksHtml += `<a href="${c.links.fc}" target="_blank">FC${svgExt}</a>`;
+            if(c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
+            if(c.links.ref) linksHtml += `<a href="${c.links.ref}" target="_blank">Ref${svgExt}</a>`;
+
+            let colsHtml = `<td class="col-date">${formatDate(c.date)}</td>`;
+            if (isPendingView) colsHtml += `<td><span class="badge badge-default">${c._sourceName}</span></td>`;
+            colsHtml += `<td class="col-name">${c.agent}</td>`;
             
-            const pi = filtered.filter(c => c.status === 'Pending internal action').length;
-            const pm = filtered.filter(c => c.status === 'Pending member action').length;
-            const statusCountsEl = container.querySelector('.status-counts');
-            if (statusCountsEl) statusCountsEl.textContent = `· ${pi} pending internal · ${pm} pending member`;
+            const dataKey = c._source;
 
-            tbody.innerHTML = '';
-            filtered.forEach(c => {
-                let linksHtml = '';
-                if(c.links.fc) linksHtml += `<a href="${c.links.fc}" target="_blank">FC${svgExt}</a>`;
-                if(c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
-                if(c.links.ref) linksHtml += `<a href="${c.links.ref}" target="_blank">Ref${svgExt}</a>`;
-
-                let colsHtml = `<td class="col-date">${formatDate(c.date)}</td><td class="col-name">${c.agent}</td>`;
-                
+            if (isPendingView) {
+                colsHtml += `<td>${c.related || '-'}</td>
+                             <td><span class="badge badge-type">${c.type || '-'}</span></td>
+                             <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                             <td>${c.action || '-'}</td>`;
+            } else {
                 if (dataKey === 'fbig') {
                     colsHtml += `<td>${c.related || '-'}</td>
                                  <td><span class="badge badge-type">${c.type || '-'}</span></td>
@@ -1521,19 +1582,37 @@
                     const sentClass = c.sentiment === 'Positive' ? 'badge-positive' : 'badge-negative';
                     colsHtml += `<td>${c.related || '-'}</td>
                                  <td><span class="badge badge-type">${c.type || '-'}</span></td>
-                                 <td><span class="badge ${sentClass}">${c.sentiment}</span></td>
+                                 <td><span class="badge ${sentClass}">${c.sentiment || '-'}</span></td>
                                  <td>${c.action || '-'}</td>`;
                 }
+            }
 
-                colsHtml += `<td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
-                             <td class="links-col">${linksHtml}</td>
-                             <td style="text-align:right;">
-                                <button class="btn-icon" onclick="editCase('${dataKey}', '${c.id}')">${svgEdit}</button>
-                                <button class="btn-icon" onclick="deleteCase('${dataKey}', '${c.id}')">${svgDel}</button>
-                             </td>`;
-                
-                tbody.innerHTML += `<tr>${colsHtml}</tr>`;
-            });
+            colsHtml += `<td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
+                         <td class="links-col">${linksHtml}</td>
+                         <td style="text-align:right;">
+                            <button class="btn-icon" onclick="editCase('${dataKey}', '${c.id}')">${svgEdit}</button>
+                            <button class="btn-icon" onclick="deleteCase('${dataKey}', '${c.id}')">${svgDel}</button>
+                         </td>`;
+            return `<tr>${colsHtml}</tr>`;
+        }
+
+        function renderTable(pageId, dataKey) {
+            const container = document.getElementById(pageId);
+            if (!container) return;
+            const tbody = container.querySelector('.table-body');
+            if (!tbody) return;
+            
+            const filtered = getFilteredCases(dataKey, false);
+
+            const entryCountEl = container.querySelector('.entry-count');
+            if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
+            
+            const pi = filtered.filter(c => c.status === 'Pending internal action').length;
+            const pm = filtered.filter(c => c.status === 'Pending member action').length;
+            const statusCountsEl = container.querySelector('.status-counts');
+            if (statusCountsEl) statusCountsEl.textContent = `· ${pi} pending internal · ${pm} pending member`;
+
+            tbody.innerHTML = filtered.map(c => generateTableRowHtml(c, false)).join('');
         }
 
         function renderPendingTable() {
@@ -1542,53 +1621,14 @@
             const tbody = container.querySelector('.table-body');
             if (!tbody) return;
             
-            const searchInput = container.querySelector('.table-search');
-            const search = searchInput ? searchInput.value.toLowerCase() : '';
-            
-            const allCases = [
-                ...state.cases.fbig.map(c => ({...c, _source: 'fbig', _sourceName: 'FB/IG'})),
-                ...state.cases.reddit.map(c => ({...c, _source: 'reddit', _sourceName: 'Reddit'})),
-                ...state.cases.review.map(c => ({...c, _source: 'review', _sourceName: 'Review'}))
-            ];
-            
-            let filtered = allCases.filter(c => {
-                let isPending = c.status.toLowerCase().includes('pending');
-                let matchesSearch = c.agent.toLowerCase().includes(search) || 
-                                    (c.req && c.req.toLowerCase().includes(search));
-                return isPending && matchesSearch && applyAdvFilters(c);
-            });
-            
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const filtered = getFilteredCases('pending', true);
 
             const entryCountEl = container.querySelector('.entry-count');
             if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
             const statusCountsEl = container.querySelector('.status-counts');
             if (statusCountsEl) statusCountsEl.textContent = `· ${filtered.length} pending entries combined`;
             
-            tbody.innerHTML = '';
-            filtered.forEach(c => {
-                let linksHtml = '';
-                if(c.links.fc) linksHtml += `<a href="${c.links.fc}" target="_blank">FC${svgExt}</a>`;
-                if(c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
-                if(c.links.ref) linksHtml += `<a href="${c.links.ref}" target="_blank">Ref${svgExt}</a>`;
-
-                let colsHtml = `
-                    <td class="col-date">${formatDate(c.date)}</td>
-                    <td><span class="badge badge-default">${c._sourceName}</span></td>
-                    <td class="col-name">${c.agent}</td>
-                    <td>${c.related || '-'}</td>
-                    <td><span class="badge badge-type">${c.type || '-'}</span></td>
-                    <td><span class="badge badge-req">${c.req || '-'}</span></td>
-                    <td>${c.action || '-'}</td>
-                    <td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
-                    <td class="links-col">${linksHtml}</td>
-                    <td style="text-align:right;">
-                        <button class="btn-icon" onclick="editCase('${c._source}', '${c.id}')">${svgEdit}</button>
-                        <button class="btn-icon" onclick="deleteCase('${c._source}', '${c.id}')">${svgDel}</button>
-                    </td>
-                `;
-                tbody.innerHTML += `<tr>${colsHtml}</tr>`;
-            });
+            tbody.innerHTML = filtered.map(c => generateTableRowHtml(c, true)).join('');
         }
 
         function renderAllTables() {
@@ -1723,12 +1763,13 @@
         document.getElementById('btn-close-import').addEventListener('click', closePanel);
         document.getElementById('btn-cancel-import').addEventListener('click', closePanel);
 
-        document.getElementById('btn-confirm-import').addEventListener('click', () => {
+        document.getElementById('btn-confirm-import').addEventListener('click', async () => {
             const raw = document.getElementById('import-textarea').value.trim();
             if (!raw) return closePanel();
             
             const selectedYear = document.getElementById('import-year').value;
             const rows = raw.split('\n');
+            const dbCasesToInsert = [];
             
             rows.forEach(row => {
                 if (!row.trim()) return;
@@ -1789,7 +1830,7 @@
                 if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
 
                 const entry = {
-                    id: Date.now() + Math.random(),
+                    id: Date.now() + Math.random().toString(), // Generate safe string ID
                     date: dateVal,
                     agent: agent,
                     related: related,
@@ -1811,7 +1852,25 @@
                 }
                 
                 state.cases[state.importTarget].unshift(entry);
+
+                // Prepare for Supabase
+                dbCasesToInsert.push({
+                    id: entry.id.toString(),
+                    source: state.importTarget,
+                    date: entry.date,
+                    agent: entry.agent,
+                    related: entry.related,
+                    type: entry.type || null,
+                    sentiment: entry.sentiment || null,
+                    action: entry.action,
+                    req: entry.req,
+                    status: entry.status,
+                    link_fc: entry.links.fc || null,
+                    link_post: entry.links.post || null,
+                    link_ref: entry.links.ref || null
+                });
                 
+                // Track new unique values for dropdowns
                 if (entry.agent !== '-' && !state.agents.includes(entry.agent)) state.agents.push(entry.agent);
                 if (entry.req !== '-' && !state.requestTypes.includes(entry.req)) state.requestTypes.push(entry.req);
                 if (entry.action !== '-' && !state.actions.includes(entry.action)) state.actions.push(entry.action);
@@ -1819,7 +1878,16 @@
                 if (entry.type && entry.type !== '-' && !state.interactionTypes.includes(entry.type) && state.importTarget === 'fbig') state.interactionTypes.push(entry.type);
             });
 
-            window.saveState();
+            // Save records to relational database
+            try {
+                if (dbCasesToInsert.length > 0) {
+                    await supabase.from('cases').insert(dbCasesToInsert);
+                }
+                await window.saveSettingsToSupabase();
+            } catch (e) {
+                console.error("Bulk insert error:", e);
+            }
+
             renderAllTables();
             closePanel();
         });
@@ -1842,7 +1910,7 @@
 
         document.getElementById('form-agent').addEventListener('change', (e) => e.target.classList.remove('error'));
 
-        document.getElementById('btn-save').addEventListener('click', () => {
+        document.getElementById('btn-save').addEventListener('click', async () => {
             const agent = document.getElementById('form-agent');
             const req = document.getElementById('form-req');
             let valid = true;
@@ -1850,7 +1918,7 @@
             if(!valid) return;
 
             const entry = {
-                id: state.editingId ? state.editingId : Date.now(),
+                id: state.editingId ? state.editingId : Date.now().toString() + Math.random().toString(),
                 date: document.getElementById('form-date').value,
                 agent: agent.value,
                 req: req.value || '-',
@@ -1870,14 +1938,36 @@
                 entry.sentiment = state.newEntrySentiment;
             }
 
-            if (state.editingId) {
-                const idx = state.cases[state.editingKey].findIndex(c => c.id == state.editingId);
-                if (idx > -1) state.cases[state.editingKey][idx] = entry;
-            } else {
-                state.cases[state.activePanelType].unshift(entry);
+            // Standardize object for DB saving
+            const dbCaseData = {
+                id: entry.id.toString(),
+                source: state.activePanelType,
+                date: entry.date,
+                agent: entry.agent,
+                related: entry.related,
+                type: entry.type || null,
+                sentiment: entry.sentiment || null,
+                action: entry.action,
+                req: entry.req,
+                status: entry.status,
+                link_fc: entry.links.fc || null,
+                link_post: entry.links.post || null,
+                link_ref: entry.links.ref || null
+            };
+
+            try {
+                if (state.editingId) {
+                    const idx = state.cases[state.editingKey].findIndex(c => c.id == state.editingId);
+                    if (idx > -1) state.cases[state.editingKey][idx] = entry;
+                    await supabase.from('cases').update(dbCaseData).eq('id', dbCaseData.id);
+                } else {
+                    state.cases[state.activePanelType].unshift(entry);
+                    await supabase.from('cases').insert(dbCaseData);
+                }
+            } catch (e) {
+                console.error("Save case error:", e);
             }
             
-            window.saveState();
             renderAllTables();
             closePanel();
         });
@@ -1962,14 +2052,14 @@
             if(val && !state[key].includes(val)) {
                 state[key].push(val);
                 inp.value = '';
-                window.saveState();
+                window.saveSettingsToSupabase();
                 renderEditLists();
             }
         };
 
         window.delEditItem = function(key, val) {
             state[key] = state[key].filter(i => i !== val);
-            window.saveState();
+            window.saveSettingsToSupabase();
             renderEditLists();
         };
 
@@ -2353,69 +2443,28 @@
             let headers = [];
             let filename = 'export.csv';
 
-            const getFiltered = (dataKey) => {
-                const searchInput = container.querySelector('.table-search');
-                const search = searchInput ? searchInput.value.toLowerCase() : '';
-                const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
-
-                let filtered = state.cases[dataKey].filter(c => {
-                    let matchesSearch = c.agent.toLowerCase().includes(search) || 
-                                        (c.type && c.type.toLowerCase().includes(search)) ||
-                                        (c.req && c.req.toLowerCase().includes(search));
-                    let matchesChip = true;
-                    if (activeChip !== 'All') {
-                        if (dataKey === 'fbig' || dataKey === 'review') {
-                            matchesChip = c.type === activeChip || c.sentiment === activeChip;
-                        } else if (dataKey === 'reddit') {
-                            matchesChip = c.related === activeChip;
-                        }
-                    }
-                    return matchesSearch && matchesChip && applyAdvFilters(c);
-                });
-                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-                return filtered;
-            };
-
             if (activePage === 'page-fbig') {
                 headers = ['Date', 'Agent Name', 'Related To', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
                 filename = 'fbig_cases.csv';
-                data = getFiltered('fbig').map(c => [
+                data = getFilteredCases('fbig', false).map(c => [
                     formatDate(c.date), c.agent, c.related || '-', c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-reddit') {
                 headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Post / Thread Link', 'Reference Link'];
                 filename = 'reddit_cases.csv';
-                data = getFiltered('reddit').map(c => [
+                data = getFilteredCases('reddit', false).map(c => [
                     formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-review') {
                 headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Status', 'Reference Link'];
                 filename = 'review_cases.csv';
-                data = getFiltered('review').map(c => [
+                data = getFilteredCases('review', false).map(c => [
                     formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.status, c.links.ref || ''
                 ]);
             } else if (activePage === 'page-pending') {
                 headers = ['Date', 'Source', 'Agent Name', 'Related To', 'Type', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
                 filename = 'pending_cases.csv';
-                
-                const searchInput = container.querySelector('.table-search');
-                const search = searchInput ? searchInput.value.toLowerCase() : '';
-                
-                const allCases = [
-                    ...state.cases.fbig.map(c => ({...c, _sourceName: 'FB/IG'})),
-                    ...state.cases.reddit.map(c => ({...c, _sourceName: 'Reddit'})),
-                    ...state.cases.review.map(c => ({...c, _sourceName: 'Review'}))
-                ];
-                
-                let filtered = allCases.filter(c => {
-                    let isPending = c.status.toLowerCase().includes('pending');
-                    let matchesSearch = c.agent.toLowerCase().includes(search) || 
-                                        (c.req && c.req.toLowerCase().includes(search));
-                    return isPending && matchesSearch && applyAdvFilters(c);
-                });
-                
-                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-                data = filtered.map(c => [
+                data = getFilteredCases('pending', true).map(c => [
                     formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-weekly' || activePage === 'page-monthly') {
