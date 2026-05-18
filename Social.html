@@ -241,7 +241,7 @@
             justify-content: center;
             align-items: center;
         }
-        .btn-icon:hover { color: var(--purple-main); background: var(--bg-sidebar); }
+        .btn-icon:hover:not(:disabled) { color: var(--purple-main); background: var(--bg-sidebar); }
         .btn-icon:disabled { color: var(--border-light); cursor: not-allowed; background: transparent; }
 
         /* Filter Bar */
@@ -374,17 +374,30 @@
             gap: 2px;
         }
 
-        /* Status Bar */
+        /* Status Bar with Pagination */
         .status-bar {
             padding: 7px 20px;
             background-color: var(--bg-main);
             border-top: 1px solid var(--border-light);
             display: flex;
             align-items: center;
+            justify-content: space-between;
             font-size: 11px;
             color: var(--text-muted);
             flex-shrink: 0;
             gap: 6px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .dot-green {
@@ -632,7 +645,22 @@
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -663,7 +691,22 @@
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -693,7 +736,22 @@
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -714,7 +772,22 @@
                     </table>
                 </div>
                 <div class="status-bar">
-                    <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending entries combined</span>
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending entries combined</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1083,6 +1156,13 @@
             viewState: {
                 weeklyEndMonday: null,
                 monthlyDate: null
+            },
+            
+            pagination: {
+                fbig: { page: 1, limit: 50 },
+                reddit: { page: 1, limit: 50 },
+                review: { page: 1, limit: 50 },
+                pending: { page: 1, limit: 50 }
             }
         };
 
@@ -1132,6 +1212,38 @@
             
             setupDateControlListeners();
             document.querySelectorAll('.btn-export').forEach(btn => btn.addEventListener('click', handleExport));
+
+            // Pagination Listeners
+            document.querySelectorAll('.btn-prev-page').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabKey = btn.closest('.page-view').id.replace('page-', '');
+                    if (state.pagination[tabKey] && state.pagination[tabKey].page > 1) {
+                        state.pagination[tabKey].page--;
+                        renderAllTables();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-next-page').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabKey = btn.closest('.page-view').id.replace('page-', '');
+                    if (state.pagination[tabKey]) {
+                        state.pagination[tabKey].page++;
+                        renderAllTables();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.rows-per-page').forEach(sel => {
+                sel.addEventListener('change', (e) => {
+                    const tabKey = sel.closest('.page-view').id.replace('page-', '');
+                    if (state.pagination[tabKey]) {
+                        state.pagination[tabKey].limit = parseInt(e.target.value);
+                        state.pagination[tabKey].page = 1;
+                        renderAllTables();
+                    }
+                });
+            });
 
             const currentYear = new Date().getFullYear();
             const yearSelect = document.getElementById('import-year');
@@ -1497,9 +1609,15 @@
 
                 // Save page persistent navigation
                 localStorage.setItem('sm_tracker_last_page', pageId);
+                
+                // Reset pagination on tab switch
+                const tabKey = pageId.replace('page-', '');
+                if (state.pagination[tabKey]) state.pagination[tabKey].page = 1;
 
                 if (pageId === 'page-weekly') renderWeeklyReview();
                 if (pageId === 'page-monthly') renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+                
+                renderAllTables();
             });
         });
 
@@ -1580,12 +1698,33 @@
 
         // --- TABLE RENDERING & FILTERING (DRY IMPLEMENTATION) ---
 
+        function updatePaginationUI(container, totalItems, dataKey) {
+            const pState = state.pagination[dataKey] || { page: 1, limit: 50 };
+            const totalPages = Math.ceil(totalItems / pState.limit) || 1;
+            
+            if (pState.page > totalPages) pState.page = totalPages;
+            if (pState.page < 1) pState.page = 1;
+            
+            const btnPrev = container.querySelector('.btn-prev-page');
+            const btnNext = container.querySelector('.btn-next-page');
+            const pageText = container.querySelector('.page-info');
+            
+            if(btnPrev) btnPrev.disabled = pState.page <= 1;
+            if(btnNext) btnNext.disabled = pState.page >= totalPages;
+            if(pageText) pageText.textContent = `Page ${pState.page} of ${totalPages}`;
+            
+            return {
+                start: (pState.page - 1) * pState.limit,
+                end: pState.page * pState.limit
+            };
+        }
+
         function getFilteredCases(dataKey, isPendingView = false) {
             const pageId = isPendingView ? 'page-pending' : 'page-' + dataKey;
             const container = document.getElementById(pageId);
             if (!container) return [];
             
-            const searchInput = container.querySelector('.table-search');
+            const searchInput = container.querySelector('.search-input');
             const search = searchInput ? searchInput.value.toLowerCase() : '';
             const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
             
@@ -1684,7 +1823,10 @@
             const statusCountsEl = container.querySelector('.status-counts');
             if (statusCountsEl) statusCountsEl.textContent = `· ${pi} pending internal · ${pm} pending member`;
 
-            tbody.innerHTML = filtered.map(c => generateTableRowHtml(c, false)).join('');
+            const { start, end } = updatePaginationUI(container, filtered.length, dataKey);
+            const paginated = filtered.slice(start, end);
+
+            tbody.innerHTML = paginated.map(c => generateTableRowHtml(c, false)).join('');
         }
 
         function renderPendingTable() {
@@ -1700,7 +1842,10 @@
             const statusCountsEl = container.querySelector('.status-counts');
             if (statusCountsEl) statusCountsEl.textContent = `· ${filtered.length} pending entries combined`;
             
-            tbody.innerHTML = filtered.map(c => generateTableRowHtml(c, true)).join('');
+            const { start, end } = updatePaginationUI(container, filtered.length, 'pending');
+            const paginated = filtered.slice(start, end);
+
+            tbody.innerHTML = paginated.map(c => generateTableRowHtml(c, true)).join('');
         }
 
         function renderAllTables() {
@@ -1710,12 +1855,20 @@
             renderPendingTable();
         }
 
-        document.querySelectorAll('.table-search').forEach(inp => inp.addEventListener('input', () => renderAllTables()));
+        document.querySelectorAll('.search-input').forEach(inp => inp.addEventListener('input', () => {
+            const tabKey = inp.closest('.page-view').id.replace('page-', '');
+            if (state.pagination[tabKey]) state.pagination[tabKey].page = 1;
+            renderAllTables();
+        }));
+        
         document.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', (e) => {
                 const container = e.currentTarget.closest('.filter-bar');
                 container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
                 e.currentTarget.classList.add('active');
+                
+                const tabKey = chip.closest('.page-view').id.replace('page-', '');
+                if (state.pagination[tabKey]) state.pagination[tabKey].page = 1;
                 renderAllTables();
             });
         });
@@ -1765,7 +1918,7 @@
             overlay.classList.add('active');
             sidePanel.classList.add('active');
         }
-        
+
         document.querySelectorAll('.btn-new-entry').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 state.editingId = null;
@@ -1963,6 +2116,7 @@
                     if (error) throw error;
                 }
                 await window.saveSettingsToSupabase();
+                Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
                 renderAllTables();
                 closePanel();
             } catch (e) {
@@ -2045,6 +2199,7 @@
                     
                     state.cases[state.activePanelType].unshift(entry);
                 }
+                Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
                 renderAllTables();
                 closePanel();
             } catch (e) {
@@ -2075,6 +2230,7 @@
                 header.textContent = checkedCount > 0 ? `${checkedCount} selected` : header.getAttribute('data-placeholder');
             });
             
+            Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
             renderAllTables();
             closePanel();
         });
@@ -2089,6 +2245,7 @@
             });
             
             state.advFilters = { startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [], sentiments: [] };
+            Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
             renderAllTables();
         });
 
