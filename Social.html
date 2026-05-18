@@ -590,7 +590,28 @@
 </head>
 <body>
 
-    <div class="app-container">
+    <div id="auth-view" style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background-color: var(--bg-sidebar);">
+        <div style="background: var(--bg-main); padding: 32px; border-radius: 12px; border: 1px solid var(--border-light); width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 18px; margin-bottom: 24px; color: var(--text-main);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--purple-main)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                SM Tracker
+            </div>
+            <form id="login-form">
+                <div class="form-group" style="margin-bottom: 16px; text-align: left;">
+                    <label style="display: block; margin-bottom: 6px;">Email</label>
+                    <input type="email" id="auth-email" class="form-control" required style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom: 24px; text-align: left;">
+                    <label style="display: block; margin-bottom: 6px;">Password</label>
+                    <input type="password" id="auth-password" class="form-control" required style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div id="auth-error" style="color: var(--red-text); font-size: 12px; margin-bottom: 16px; text-align: center; display: none;"></div>
+                <button type="submit" class="btn btn-purple" style="width: 100%; justify-content: center; padding: 10px; font-size: 14px;">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-container" id="app-container" style="display: none;">
         
         <div class="sidebar">
             <div class="logo-container">
@@ -613,6 +634,12 @@
             
             <div class="nav-item nav-link" data-target="page-edit">Edit Data</div>
             <div class="nav-item nav-link" data-target="page-settings">Settings</div>
+            
+            <div style="flex-grow: 1;"></div>
+            <div class="nav-item" id="btn-logout" style="margin-bottom: 16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Log Out
+            </div>
         </div>
 
         <div class="main-content">
@@ -3044,8 +3071,71 @@
             document.body.removeChild(link);
         }
 
-        // Boot
-        init();
+        // --- AUTHENTICATION BOOT ---
+        const authView = document.getElementById('auth-view');
+        const appContainer = document.getElementById('app-container');
+        const authError = document.getElementById('auth-error');
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Logging in...';
+            btn.disabled = true;
+            authError.style.display = 'none';
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+
+            if (error) {
+                authError.textContent = error.message;
+                authError.style.display = 'block';
+            } else {
+                showApp();
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.reload();
+        });
+
+        function showApp() {
+            authView.style.display = 'none';
+            appContainer.style.display = 'flex';
+            
+            // Only trigger database load if it hasn't been initialized yet
+            if (!window.appInitialized) {
+                init();
+                window.appInitialized = true;
+            }
+        }
+
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                showApp();
+            } else {
+                authView.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+            
+            // Re-direct to login screen instantly if session expires or manual logout happens
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
+                    window.location.reload();
+                }
+            });
+        }
+        
+        // Start app by checking authentication status
+        checkAuth();
 
     </script>
 </body>
