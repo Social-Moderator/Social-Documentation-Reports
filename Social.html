@@ -1505,16 +1505,16 @@
 
         document.getElementById('btn-confirm-del').addEventListener('click', async () => {
             if(pendingDelete) {
-                // Update local state
-                state.cases[pendingDelete.dataKey] = state.cases[pendingDelete.dataKey].filter(c => c.id != pendingDelete.id);
-                
-                // Update Supabase
                 try {
-                    await supabase.from('cases').delete().eq('id', pendingDelete.id.toString());
+                    const { error } = await supabase.from('cases').delete().eq('id', pendingDelete.id.toString());
+                    if (error) throw error;
+                    
+                    // Update local state ONLY IF SUCCESS
+                    state.cases[pendingDelete.dataKey] = state.cases[pendingDelete.dataKey].filter(c => c.id != pendingDelete.id);
+                    renderAllTables();
                 } catch (e) {
                     console.error("Delete error:", e);
                 }
-                renderAllTables();
             }
             pendingDelete = null;
             document.getElementById('delete-modal').classList.remove('active');
@@ -1938,15 +1938,15 @@
 
             try {
                 if (dbCasesToInsert.length > 0) {
-                    await supabase.from('cases').insert(dbCasesToInsert);
+                    const { error } = await supabase.from('cases').insert(dbCasesToInsert);
+                    if (error) throw error;
                 }
                 await window.saveSettingsToSupabase();
+                renderAllTables();
+                closePanel();
             } catch (e) {
                 console.error("Bulk insert error:", e);
             }
-
-            renderAllTables();
-            closePanel();
         });
 
         document.querySelectorAll('#form-status .status-btn').forEach(b => {
@@ -2013,19 +2013,23 @@
 
             try {
                 if (state.editingId) {
+                    const { error } = await supabase.from('cases').update(dbCaseData).eq('id', dbCaseData.id);
+                    if (error) throw error;
+                    
                     const idx = state.cases[state.editingKey].findIndex(c => c.id == state.editingId);
                     if (idx > -1) state.cases[state.editingKey][idx] = entry;
-                    await supabase.from('cases').update(dbCaseData).eq('id', dbCaseData.id);
                 } else {
+                    const { error } = await supabase.from('cases').insert([dbCaseData]);
+                    if (error) throw error;
+                    
                     state.cases[state.activePanelType].unshift(entry);
-                    await supabase.from('cases').insert(dbCaseData);
                 }
+                renderAllTables();
+                closePanel();
             } catch (e) {
                 console.error("Save case error:", e);
+                // The panel will stay open, indicating the save failed visually to the user.
             }
-            
-            renderAllTables();
-            closePanel();
         });
 
         document.getElementById('btn-apply-adv').addEventListener('click', () => {
