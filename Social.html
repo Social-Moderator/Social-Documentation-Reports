@@ -237,8 +237,12 @@
             background: transparent;
             cursor: pointer;
             color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .btn-icon:hover { color: var(--purple-main); background: var(--bg-sidebar); }
+        .btn-icon:disabled { color: var(--border-light); cursor: not-allowed; background: transparent; }
 
         /* Filter Bar */
         .filter-bar {
@@ -1085,8 +1089,14 @@
         const svgExt = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;margin-left:2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
         const svgEdit = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
         const svgDel = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+        const svgUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+        const svgDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
         let charts = {};
+
+        // Configuration for mapping specific actions to SOP in Data Analysis
+        const actionRemapList = ["provided from retool", "provided from tempo app", "provided from shopify", "provided from coda"];
+        const actionTargetName = "Provided Support From SOP";
 
         // --- RELATIONAL SUPABASE SYNC UTILS ---
         window.saveSettingsToSupabase = async function() {
@@ -1131,8 +1141,20 @@
                 }
             }
 
-            document.querySelector('[data-target="page-fbig"]').click();
             document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+            
+            // LOCALSTORAGE NAVIGATION LOGIC
+            const lastPageId = localStorage.getItem('sm_tracker_last_page') || 'page-fbig';
+            const targetNav = document.querySelector(`[data-target="${lastPageId}"]`);
+            if (targetNav) {
+                if(targetNav.classList.contains('nav-sub-item')) {
+                    const parent = document.getElementById('nav-data-analysis');
+                    if(parent) parent.setAttribute('data-expanded', 'true');
+                }
+                targetNav.click();
+            } else {
+                document.querySelector('[data-target="page-fbig"]').click();
+            }
             
             document.getElementById('search-edit-req').addEventListener('input', (e) => {
                 renderEditList('list-req', state.requestTypes, 'requestTypes', e.target.value);
@@ -1159,7 +1181,7 @@
                     document.documentElement.removeAttribute('data-theme');
                     Chart.defaults.color = '#888888';
                 }
-                ['wk1', 'wk2', 'wk3', 'wk4', 'mo1'].forEach(id => {
+                ['wk1', 'wk2', 'wk3', 'wk4', 'mo1', 'mo-chart-rel', 'mo-chart-act', 'mo-chart-review'].forEach(id => {
                     if (charts[id]) charts[id].update();
                 });
             });
@@ -1206,7 +1228,6 @@
                         state.statuses = dedupe(dbData.statuses || state.statuses);
                         state.interactionTypes = dedupe(dbData.interaction_types || state.interactionTypes);
                         
-                        // Silently save cleaned version back to Supabase to permanently fix trailing spaces
                         window.saveSettingsToSupabase();
                     } else {
                         window.saveSettingsToSupabase();
@@ -1453,6 +1474,9 @@
                 const pageId = target.getAttribute('data-target');
                 document.getElementById(pageId).classList.add('active');
 
+                // Save page persistent navigation
+                localStorage.setItem('sm_tracker_last_page', pageId);
+
                 if (pageId === 'page-weekly') renderWeeklyReview();
                 if (pageId === 'page-monthly') renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
             });
@@ -1535,7 +1559,6 @@
 
         // --- TABLE RENDERING & FILTERING (DRY IMPLEMENTATION) ---
 
-        // Helper function to return globally filtered cases array for any source
         function getFilteredCases(dataKey, isPendingView = false) {
             const pageId = isPendingView ? 'page-pending' : 'page-' + dataKey;
             const container = document.getElementById(pageId);
@@ -1579,7 +1602,6 @@
             return filtered;
         }
 
-        // Helper function to create HTML for a single table row
         function generateTableRowHtml(c, isPendingView) {
             let linksHtml = '';
             if(c.links.fc) linksHtml += `<a href="${c.links.fc}" target="_blank">FC${svgExt}</a>`;
@@ -1792,7 +1814,6 @@
         document.getElementById('btn-close-import').addEventListener('click', closePanel);
         document.getElementById('btn-cancel-import').addEventListener('click', closePanel);
 
-        // Helper to avoid duplicate dropdown additions during import
         const addIfUniqueAndReturn = (arr, val) => {
             if (!val || val === '-') return val;
             const trimmed = val.trim();
@@ -1868,7 +1889,6 @@
                 if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
                 if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
 
-                // Smart Deduplication checking
                 agent = addIfUniqueAndReturn(state.agents, agent);
                 related = addIfUniqueAndReturn(state.relatedTo, related);
                 action = addIfUniqueAndReturn(state.actions, action);
@@ -1876,7 +1896,7 @@
                 if (state.importTarget === 'fbig') type = addIfUniqueAndReturn(state.interactionTypes, type);
 
                 const entry = {
-                    id: Date.now() + Math.random().toString(), // Generate safe string ID
+                    id: Date.now() + Math.random().toString(), 
                     date: dateVal,
                     agent: agent,
                     related: related,
@@ -1899,7 +1919,6 @@
                 
                 state.cases[state.importTarget].unshift(entry);
 
-                // Prepare for Supabase
                 dbCasesToInsert.push({
                     id: entry.id.toString(),
                     source: state.importTarget,
@@ -1917,7 +1936,6 @@
                 });
             });
 
-            // Save records to relational database
             try {
                 if (dbCasesToInsert.length > 0) {
                     await supabase.from('cases').insert(dbCasesToInsert);
@@ -1977,7 +1995,6 @@
                 entry.sentiment = state.newEntrySentiment;
             }
 
-            // Standardize object for DB saving
             const dbCaseData = {
                 id: entry.id.toString(),
                 source: state.activePanelType,
@@ -2078,24 +2095,60 @@
             if(key === 'requestTypes' && !filterStr && limit > 8) limit = 8;
             
             for(let i=0; i<limit; i++) {
-                c.innerHTML += `<div class="edit-item"><span>${dispArr[i]}</span><button class="btn-icon" onclick="window.delEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}')">${svgDel}</button></div>`;
+                let upBtn = `<button class="btn-icon" onclick="window.moveEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}', -1)">${svgUp}</button>`;
+                let downBtn = `<button class="btn-icon" onclick="window.moveEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}', 1)">${svgDown}</button>`;
+                
+                if (filterStr) {
+                    upBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgUp}</button>`;
+                    downBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgDown}</button>`;
+                } else {
+                    if (i === 0) upBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgUp}</button>`;
+                    if (i === arr.length - 1) downBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgDown}</button>`;
+                }
+
+                c.innerHTML += `<div class="edit-item">
+                    <span>${dispArr[i]}</span>
+                    <div style="display:flex; gap:2px; align-items:center;">
+                        ${upBtn}
+                        ${downBtn}
+                        <button class="btn-icon" onclick="window.delEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}')" style="margin-left:8px;">${svgDel}</button>
+                    </div>
+                </div>`;
             }
             if(key === 'requestTypes' && limit < dispArr.length) {
                 c.innerHTML += `<div class="edit-item" style="justify-content:center;color:var(--text-muted);"><em>... and ${dispArr.length - limit} more. Search to find.</em></div>`;
             }
         }
 
+        window.moveEditItem = function(key, val, direction) {
+            const arr = state[key];
+            const idx = arr.indexOf(val);
+            if (idx === -1) return;
+            const newIdx = idx + direction;
+            if (newIdx < 0 || newIdx >= arr.length) return;
+            
+            const temp = arr[idx];
+            arr[idx] = arr[newIdx];
+            arr[newIdx] = temp;
+            
+            window.saveSettingsToSupabase();
+            renderEditLists();
+            populateDropdowns();
+            populateAdvFilters();
+        };
+
         window.addEditItem = function(key, inpId) {
             const inp = document.getElementById(inpId);
             const val = inp.value.trim();
             const valLower = val.toLowerCase();
             
-            // Check for case-insensitive duplicate before adding
             if(val && !state[key].some(i => i.toLowerCase() === valLower)) {
                 state[key].push(val);
                 inp.value = '';
                 window.saveSettingsToSupabase();
                 renderEditLists();
+                populateDropdowns();
+                populateAdvFilters();
             } else if (val) {
                 inp.value = '';
             }
@@ -2105,6 +2158,8 @@
             state[key] = state[key].filter(i => i !== val);
             window.saveSettingsToSupabase();
             renderEditLists();
+            populateDropdowns();
+            populateAdvFilters();
         };
 
         ['inp-add-agent', 'inp-add-related', 'inp-add-action', 'inp-add-req', 'inp-add-status', 'inp-add-interaction'].forEach(id => {
@@ -2151,13 +2206,18 @@
             const weekLabels = weeks.map(w => new Date(w + 'T12:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'}));
             document.getElementById('wk-range-label').textContent = `${weekLabels[0]} – ${weekLabels[5]}`;
             
-            // Build Case-Insensitive maps to merge data correctly
             const relMap = {}; state.relatedTo.forEach(r => relMap[r.trim().toLowerCase()] = r);
             const actMap = {}; state.actions.forEach(a => actMap[a.trim().toLowerCase()] = a);
             const reqMap = {}; state.requestTypes.forEach(r => reqMap[r.trim().toLowerCase()] = r);
 
             const relData = {}; state.relatedTo.forEach(r => relData[r] = [0,0,0,0,0,0]);
-            const actData = {}; state.actions.forEach(a => actData[a] = [0,0,0,0,0,0]);
+            const actData = {}; 
+            state.actions.forEach(a => {
+                if (!actionRemapList.includes(a.trim().toLowerCase())) {
+                    actData[a] = [0,0,0,0,0,0];
+                }
+            });
+            if (!actData[actionTargetName]) actData[actionTargetName] = [0,0,0,0,0,0];
             const weeklyTotals = [0,0,0,0,0,0];
             const latestReqs = {};
             
@@ -2178,12 +2238,18 @@
                     
                     let mAct = c.action ? c.action.trim() : null;
                     if (mAct) {
-                        mAct = actMap[mAct.toLowerCase()] || mAct;
+                        const lowerAct = mAct.toLowerCase();
+                        if (actionRemapList.includes(lowerAct)) {
+                            mAct = actionTargetName;
+                        } else {
+                            mAct = actMap[lowerAct] || mAct;
+                        }
+                        
                         if (!actData[mAct]) actData[mAct] = [0,0,0,0,0,0];
                         actData[mAct][wIdx]++;
                     }
                     
-                    if (wIdx === 5 && c.req) {
+                    if (wIdx === 5 && c.req && c.req !== '-') {
                         const mReq = reqMap[c.req.trim().toLowerCase()] || c.req;
                         latestReqs[mReq] = (latestReqs[mReq] || 0) + 1;
                     }
@@ -2236,10 +2302,39 @@
             charts['wk2'] = new Chart(document.getElementById('wk-chart2'), {
                 type: 'bar',
                 data: { 
-                    labels: weekLabels, 
-                    datasets: Object.keys(relData).map((k, i) => ({ label: k, data: relData[k], backgroundColor: ['#534AB7', '#85B7EB', '#EF9F27', '#BBBBBB', '#E07070'][i%5] }))
+                    labels: Object.keys(relData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return lines;
+                    }), 
+                    datasets: weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(relData).map(k => relData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
                 },
-                options: { responsive: true, plugins: { title: { display: true, text: 'Ticket Related', align: 'start' } } }
+                options: { 
+                    responsive: true, 
+                    plugins: { title: { display: true, text: 'Ticket Related', align: 'start' } },
+                    scales: { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
             });
 
             charts['wk3'] = new Chart(document.getElementById('wk-chart3'), {
@@ -2336,36 +2431,65 @@
                 const totalNeg = iosNeg + gogNeg;
 
                 let html = `
-                    <div class="da-section" style="max-width: 600px; margin: 0;">
-                        <table class="da-table">
-                            <tr>
-                                <th>Platform</th>
-                                <th>Positive</th>
-                                <th>Negative</th>
-                                <th>Total</th>
-                            </tr>
-                            <tr>
-                                <td>iOS Review</td>
-                                <td>${iosPos}</td>
-                                <td>${iosNeg}</td>
-                                <td>${iosPos + iosNeg}</td>
-                            </tr>
-                            <tr>
-                                <td>Google Review</td>
-                                <td>${gogPos}</td>
-                                <td>${gogNeg}</td>
-                                <td>${gogPos + gogNeg}</td>
-                            </tr>
-                            <tr class="total-row">
-                                <td>Grand Total</td>
-                                <td>${totalPos}</td>
-                                <td>${totalNeg}</td>
-                                <td>${totalPos + totalNeg}</td>
-                            </tr>
-                        </table>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+                        <div class="da-section" style="margin: 0;">
+                            <table class="da-table">
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>Positive</th>
+                                    <th>Negative</th>
+                                    <th>Total</th>
+                                </tr>
+                                <tr>
+                                    <td>iOS Review</td>
+                                    <td>${iosPos}</td>
+                                    <td>${iosNeg}</td>
+                                    <td>${iosPos + iosNeg}</td>
+                                </tr>
+                                <tr>
+                                    <td>Google Review</td>
+                                    <td>${gogPos}</td>
+                                    <td>${gogNeg}</td>
+                                    <td>${gogPos + gogNeg}</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td>Grand Total</td>
+                                    <td>${totalPos}</td>
+                                    <td>${totalNeg}</td>
+                                    <td>${totalPos + totalNeg}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="da-section chart-container" style="margin: 0; padding: 20px;">
+                            <canvas id="mo-chart-review" height="200"></canvas>
+                        </div>
                     </div>
                 `;
                 document.getElementById('mo-container').innerHTML = html;
+
+                destroyChart('mo1');
+                destroyChart('mo-chart-rel');
+                destroyChart('mo-chart-act');
+                destroyChart('mo-chart-review');
+
+                charts['mo-chart-review'] = new Chart(document.getElementById('mo-chart-review'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['iOS Review', 'Google Review'],
+                        datasets: [
+                            { label: 'Positive', data: [iosPos, gogPos], backgroundColor: '#8EC25B' },
+                            { label: 'Negative', data: [iosNeg, gogNeg], backgroundColor: '#E67A7A' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Review Sentiments by Platform', align: 'start' }
+                        }
+                    }
+                });
+
                 return;
             }
 
@@ -2373,9 +2497,15 @@
             if (tab === 'all') {
                 targetCases = [...state.cases.fbig.map(c=>({...c, _source:'fbig'}))];
             } else if (tab === 'fb') {
-                targetCases = state.cases.fbig.filter(c => ["DM", "Page comments", "Group comments"].includes(c.type)).map(c=>({...c, _source:'fbig'}));
+                targetCases = state.cases.fbig.filter(c => {
+                    const t = c.type ? c.type.trim().toLowerCase() : '';
+                    return ["dm", "page comments", "group comments"].includes(t);
+                }).map(c=>({...c, _source:'fbig'}));
             } else if (tab === 'ig') {
-                targetCases = state.cases.fbig.filter(c => ["Instagram Comments", "Instagram DM"].includes(c.type)).map(c=>({...c, _source:'fbig'}));
+                targetCases = state.cases.fbig.filter(c => {
+                    const t = c.type ? c.type.trim().toLowerCase() : '';
+                    return ["instagram comments", "instagram dm", "instagram"].includes(t);
+                }).map(c=>({...c, _source:'fbig'}));
             } else if (tab === 'reddit') {
                 targetCases = state.cases.reddit.map(c=>({...c, _source:'reddit'}));
             }
@@ -2387,17 +2517,30 @@
 
             const monthShort = targetD.toLocaleDateString('en-US', {month: 'short'});
             const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
-            const bucketStarts = [1, 8, 15, 22, 29].filter(d => d <= daysInMonth);
-            const weekLabels = bucketStarts.map(d => `${d} ${monthShort}`);
+            let bucketStarts = [1, 8, 15, 22, 29].filter(d => d <= daysInMonth);
+            let weekLabels = bucketStarts.map(d => `${d} ${monthShort}`);
 
-            // Build Case-Insensitive maps
+            // Remove 'fb' from this list so it uses the weekly buckets again
+            const isMonthlyTotalOnly = (tab === 'reddit' || tab === 'ig');
+            if (isMonthlyTotalOnly) {
+                bucketStarts = [1];
+                const monthLong = targetD.toLocaleDateString('en-US', {month: 'long'});
+                weekLabels = [monthLong];
+            }
+
             const relMap = {}; state.relatedTo.forEach(r => relMap[r.trim().toLowerCase()] = r);
             const actMap = {}; state.actions.forEach(a => actMap[a.trim().toLowerCase()] = a);
             const reqMap = {}; state.requestTypes.forEach(r => reqMap[r.trim().toLowerCase()] = r);
             const chanMap = {}; state.interactionTypes.forEach(t => chanMap[t.trim().toLowerCase()] = t);
 
             const relData = {}; state.relatedTo.forEach(r => relData[r] = new Array(bucketStarts.length).fill(0));
-            const actData = {}; state.actions.forEach(a => actData[a] = new Array(bucketStarts.length).fill(0));
+            const actData = {}; 
+            state.actions.forEach(a => {
+                if (!actionRemapList.includes(a.trim().toLowerCase())) {
+                    actData[a] = new Array(bucketStarts.length).fill(0);
+                }
+            });
+            if (!actData[actionTargetName]) actData[actionTargetName] = new Array(bucketStarts.length).fill(0);
             const weeklyTotals = new Array(bucketStarts.length).fill(0);
             
             const topReqsMap = {};
@@ -2406,12 +2549,15 @@
             targetCases.forEach(c => {
                 const day = new Date(c.date + 'T12:00:00').getDate();
                 let wIdx = 0;
-                if(day >= 29) wIdx = 4;
-                else if(day >= 22) wIdx = 3;
-                else if(day >= 15) wIdx = 2;
-                else if(day >= 8) wIdx = 1;
+                
+                if (!isMonthlyTotalOnly) {
+                    if(day >= 29) wIdx = 4;
+                    else if(day >= 22) wIdx = 3;
+                    else if(day >= 15) wIdx = 2;
+                    else if(day >= 8) wIdx = 1;
 
-                if (wIdx >= bucketStarts.length) wIdx = bucketStarts.length - 1;
+                    if (wIdx >= bucketStarts.length) wIdx = bucketStarts.length - 1;
+                }
 
                 weeklyTotals[wIdx]++;
                 
@@ -2424,12 +2570,18 @@
                 
                 let mAct = c.action ? c.action.trim() : null;
                 if (mAct) {
-                    mAct = actMap[mAct.toLowerCase()] || mAct;
+                    const lowerAct = mAct.toLowerCase();
+                    if (actionRemapList.includes(lowerAct)) {
+                        mAct = actionTargetName;
+                    } else {
+                        mAct = actMap[lowerAct] || mAct;
+                    }
+
                     if (!actData[mAct]) actData[mAct] = new Array(bucketStarts.length).fill(0);
                     actData[mAct][wIdx]++;
                 }
                 
-                if (c.req) {
+                if (c.req && c.req !== '-') {
                     const mReq = reqMap[c.req.trim().toLowerCase()] || c.req;
                     topReqsMap[mReq] = (topReqsMap[mReq] || 0) + 1;
                 }
@@ -2476,8 +2628,8 @@
             tbl2 += `<tr class="total-row"><td>Grand Total</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr></table>`;
 
             let tbl3 = `<table class="da-table">
-                <tr><th>Weeks</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
-                <tr class="total-row"><td>Weekly Handled Tickets</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr>
+                <tr><th>${isMonthlyTotalOnly ? 'Month' : 'Weeks'}</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
+                <tr class="total-row"><td>${isMonthlyTotalOnly ? 'Total Handled Tickets' : 'Weekly Handled Tickets'}</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr>
             </table>`;
 
             if (isSingleCol) {
@@ -2489,6 +2641,10 @@
             } else {
                 html += `<div class="da-section">${tbl1}${tbl2}${tbl3}</div>`;
             }
+
+            const isPieChart = (tab === 'ig' || tab === 'reddit');
+            html += `<div class="da-section chart-container"><canvas id="mo-chart-rel" height="${isPieChart ? '300' : '100'}"></canvas></div>`;
+            html += `<div class="da-section chart-container"><canvas id="mo-chart-act" height="${isPieChart ? '300' : '120'}"></canvas></div>`;
 
             const top10 = sortedReqs.slice(0, 10);
             let listHtml = `<table class="list-table">`;
@@ -2504,6 +2660,100 @@
             document.getElementById('mo-container').innerHTML = html;
 
             destroyChart('mo1');
+            destroyChart('mo-chart-rel');
+            destroyChart('mo-chart-act');
+            destroyChart('mo-chart-review');
+
+            charts['mo-chart-rel'] = new Chart(document.getElementById('mo-chart-rel'), {
+                type: isPieChart ? 'pie' : 'bar',
+                data: { 
+                    labels: Object.keys(relData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return isPieChart ? lines.join(' ') : lines;
+                    }), 
+                    datasets: isPieChart ? [{
+                        data: Object.keys(relData).map(k => relData[k][0]),
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0', '#3C3489', '#8EC25B', '#E6AA5C', '#E67A7A', '#4D3310', '#1A385A', '#22361A']
+                    }] : weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(relData).map(k => relData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: !isPieChart,
+                    plugins: { 
+                        title: { display: true, text: 'Ticket Related', align: 'start' },
+                        legend: { display: isPieChart, position: 'right' }
+                    },
+                    scales: isPieChart ? undefined : { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
+            });
+
+            charts['mo-chart-act'] = new Chart(document.getElementById('mo-chart-act'), {
+                type: isPieChart ? 'pie' : 'bar',
+                data: { 
+                    labels: Object.keys(actData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return isPieChart ? lines.join(' ') : lines;
+                    }), 
+                    datasets: isPieChart ? [{
+                        data: Object.keys(actData).map(k => actData[k][0]),
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0', '#3C3489', '#8EC25B', '#E6AA5C', '#E67A7A', '#4D3310', '#1A385A', '#22361A']
+                    }] : weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(actData).map(k => actData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: !isPieChart,
+                    plugins: { 
+                        title: { display: true, text: 'Action Taken', align: 'start' },
+                        legend: { display: isPieChart, position: 'right' }
+                    },
+                    scales: isPieChart ? undefined : { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
+            });
+
             charts['mo1'] = new Chart(document.getElementById('mo-chart'), {
                 type: 'bar',
                 data: { labels: top10.map(x=>x[0]), datasets: [{ data: top10.map(x=>x[1]), backgroundColor: '#534AB7' }] },
