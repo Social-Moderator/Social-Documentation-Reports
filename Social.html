@@ -757,7 +757,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Post/Thread Text</th><th>Status</th><th>Links</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -1131,7 +1131,7 @@
                         </div>
                         <div class="link-row">
                             <label>Post / Thread</label>
-                            <input type="text" id="form-link-post" class="form-control" placeholder="Paste link…">
+                            <input type="text" id="form-link-post" class="form-control" placeholder="Paste link or text…">
                         </div>
                         <div class="link-row">
                             <label>Reference link</label>
@@ -1769,7 +1769,8 @@
             let filtered = casesToFilter.filter(c => {
                 let matchesSearch = c.agent.toLowerCase().includes(search) || 
                                     (c.type && c.type.toLowerCase().includes(search)) ||
-                                    (c.req && c.req.toLowerCase().includes(search));
+                                    (c.req && c.req.toLowerCase().includes(search)) ||
+                                    (c._source === 'review' && c.links && c.links.post && c.links.post.toLowerCase().includes(search));
                 
                 if (isPendingView) {
                     if (!c.status.toLowerCase().includes('pending')) return false;
@@ -1790,17 +1791,16 @@
         }
 
         function generateTableRowHtml(c, isPendingView) {
+            const dataKey = c._source;
             let linksHtml = '';
             if(c.links.fc) linksHtml += `<a href="${c.links.fc}" target="_blank">FC${svgExt}</a>`;
-            if(c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
+            if(dataKey !== 'review' && c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
             if(c.links.ref) linksHtml += `<a href="${c.links.ref}" target="_blank">Ref${svgExt}</a>`;
 
             let colsHtml = `<td class="col-date">${formatDate(c.date)}</td>`;
             if (isPendingView) colsHtml += `<td><span class="badge badge-default">${c._sourceName}</span></td>`;
             colsHtml += `<td class="col-name">${c.agent}</td>`;
             
-            const dataKey = c._source;
-
             if (isPendingView) {
                 colsHtml += `<td>${c.related || '-'}</td>
                              <td><span class="badge badge-type">${c.type || '-'}</span></td>
@@ -1821,7 +1821,8 @@
                     colsHtml += `<td>${c.related || '-'}</td>
                                  <td><span class="badge badge-type">${c.type || '-'}</span></td>
                                  <td><span class="badge ${sentClass}">${c.sentiment || '-'}</span></td>
-                                 <td>${c.action || '-'}</td>`;
+                                 <td>${c.action || '-'}</td>
+                                 <td>${c.links.post || '-'}</td>`;
                 }
             }
 
@@ -2002,7 +2003,7 @@
                 if (state.importTarget === 'reddit') {
                     textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tStatus\tRequest type\tDate";
                 } else if (state.importTarget === 'review') {
-                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tStatus\ttype of interaction\tDate\tPositive/ negative review";
+                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Text\tStatus\ttype of interaction\tDate\tPositive/ negative review";
                 } else {
                     textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tFresh desk Link\tDate\tStatus\ttype of interaction\tRequest type";
                 }
@@ -2087,7 +2088,11 @@
                 }
 
                 if (refLink.toUpperCase() === 'N/A' || !refLink.includes('.') || refLink.includes(' ')) refLink = '';
-                if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
+                if (state.importTarget !== 'review') {
+                    if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
+                } else {
+                    if (postLink.toUpperCase() === 'N/A') postLink = '';
+                }
                 if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
 
                 agent = addIfUniqueAndReturn(state.agents, agent);
@@ -2619,22 +2624,24 @@
                     return cd.getMonth() === targetMonth && cd.getFullYear() === targetYear;
                 });
 
-                const reviewStats = {
-                    'iOS Review': { Positive: 0, Negative: 0 },
-                    'Google Review': { Positive: 0, Negative: 0 }
-                };
+                let iosPos = 0, iosNeg = 0, gogPos = 0, gogNeg = 0;
 
                 targetCases.forEach(c => {
-                    if (reviewStats[c.type]) {
-                        if (c.sentiment === 'Positive') reviewStats[c.type].Positive++;
-                        if (c.sentiment === 'Negative') reviewStats[c.type].Negative++;
+                    const typeLower = (c.type || c.related || '').toLowerCase();
+                    const sentLower = (c.sentiment || '').toLowerCase();
+                    
+                    const isPos = sentLower.includes('pos');
+                    const isNeg = sentLower.includes('neg');
+
+                    if (typeLower.includes('ios')) {
+                        if (isPos) iosPos++;
+                        if (isNeg) iosNeg++;
+                    } else {
+                        // Count anything else as Google Review
+                        if (isPos) gogPos++;
+                        if (isNeg) gogNeg++;
                     }
                 });
-
-                const iosPos = reviewStats['iOS Review'].Positive;
-                const iosNeg = reviewStats['iOS Review'].Negative;
-                const gogPos = reviewStats['Google Review'].Positive;
-                const gogNeg = reviewStats['Google Review'].Negative;
 
                 const totalPos = iosPos + gogPos;
                 const totalNeg = iosNeg + gogNeg;
@@ -3003,10 +3010,10 @@
                     formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || ''
                 ]);
             } else if (activePage === 'page-review') {
-                headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Status', 'Reference Link'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Post/Thread Text', 'Status', 'Reference Link'];
                 filename = 'review_cases.csv';
                 data = getFilteredCases('review', false).map(c => [
-                    formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.status, c.links.ref || ''
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.links.post || '', c.status, c.links.ref || ''
                 ]);
             } else if (activePage === 'page-pending') {
                 headers = ['Date', 'Source', 'Agent Name', 'Related To', 'Type', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
