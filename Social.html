@@ -586,6 +586,12 @@
         .list-table { width: 100%; border-collapse: collapse; }
         .list-table td { padding: 8px 0; border-bottom: 1px solid var(--border-light); text-align: left; }
         .list-table td:last-child { text-align: right; }
+        
+        /* Grid Import Styles */
+        .import-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .import-table th { background: var(--bg-sidebar); border: 1px solid var(--border-light); border-top: none; border-bottom: 1px solid var(--border-light); padding: 8px; font-size: 11px; white-space: nowrap; position: sticky; top: 0; z-index: 2; text-transform: uppercase; color: var(--text-muted); }
+        .import-table td { border: 1px solid var(--border-light); padding: 6px 8px; font-size: 12px; min-width: 100px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none; }
+        .import-table td:focus { border: 1px solid var(--purple-main); background: var(--purple-bg); color: var(--purple-text); overflow: visible; white-space: normal; position: relative; z-index: 1; box-shadow: inset 0 0 0 1px var(--purple-main); }
     </style>
 </head>
 <body>
@@ -666,7 +672,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type of Interaction</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type of Interaction</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -712,7 +718,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -757,7 +763,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Post/Thread Text</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Post/Thread Text</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -793,7 +799,7 @@
                 <div class="table-container">
                     <table>
                         <thead>
-                            <tr><th>Date</th><th>Source</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th></th></tr>
+                            <tr><th>Date</th><th>Source</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
                         </thead>
                         <tbody class="table-body"></tbody>
                     </table>
@@ -1045,24 +1051,32 @@
                 </div>
             </div>
 
-            <div class="delete-modal" id="import-modal" style="width: 500px; text-align: left; padding: 20px;">
-                <div class="panel-header" style="padding:0; border:none; margin-bottom:16px;">
+            <div class="delete-modal" id="import-modal" style="width: 95%; max-width: 1200px; text-align: left; padding: 20px;">
+                <div class="panel-header" style="padding:0; border:none; margin-bottom:12px;">
                     <h3 style="margin: 0; font-size: 16px;">Import Data</h3>
                     <button class="btn-close" id="btn-close-import" style="width: 24px; height: 24px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Expected column order:</p>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                    <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Paste your spreadsheet data below (Ctrl+V) or click cells to edit directly.</p>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <label style="font-size: 11px; color: var(--text-muted); font-weight: 500;">YEAR:</label>
                         <select id="import-year" class="form-control" style="width: 80px; padding: 4px 8px; font-size: 12px;"></select>
                     </div>
                 </div>
-                <textarea id="import-textarea" class="form-control" style="height: 150px; margin-bottom: 16px; font-family: monospace; white-space: pre; overflow: auto; resize: vertical;" placeholder="Name&#9;Related to&#9;Action Taken&#9;Reference link&#9;Post/thread Link&#9;Fresh desk Link&#9;Date&#9;Status&#9;type of interaction&#9;Request type"></textarea>
-                <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button class="btn" id="btn-cancel-import">Cancel</button>
-                    <button class="btn btn-purple" id="btn-confirm-import">Import Data</button>
+                <div class="import-table-container" style="overflow:auto; height: 350px; border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 16px; background: var(--bg-main);">
+                    <table class="import-table" id="import-table">
+                        <thead><tr id="import-thead-tr"></tr></thead>
+                        <tbody id="import-tbody"></tbody>
+                    </table>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-icon" id="btn-add-import-row" style="font-size: 12px; width: auto; padding: 6px 12px;">+ Add 10 Rows</button>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn" id="btn-cancel-import">Cancel</button>
+                        <button class="btn btn-purple" id="btn-confirm-import">Import Data</button>
+                    </div>
                 </div>
             </div>
 
@@ -1409,6 +1423,7 @@
                                 action: c.action,
                                 req: c.req,
                                 status: c.status,
+                                qa: c.qa || false,
                                 links: {
                                     fc: c.link_fc,
                                     post: c.link_post,
@@ -1828,12 +1843,31 @@
 
             colsHtml += `<td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
                          <td class="links-col">${linksHtml}</td>
+                         <td style="text-align:center;">
+                            <input type="checkbox" onchange="window.toggleQA('${dataKey}', '${c.id}', this.checked)" ${c.qa ? 'checked' : ''} style="cursor:pointer;" title="QA Audited">
+                         </td>
                          <td style="text-align:right;">
                             <button class="btn-icon" onclick="editCase('${dataKey}', '${c.id}')">${svgEdit}</button>
                             <button class="btn-icon" onclick="deleteCase('${dataKey}', '${c.id}')">${svgDel}</button>
                          </td>`;
             return `<tr>${colsHtml}</tr>`;
         }
+
+        window.toggleQA = async function(dataKey, id, isChecked) {
+            const caseIdx = state.cases[dataKey].findIndex(c => c.id == id);
+            if (caseIdx > -1) {
+                state.cases[dataKey][caseIdx].qa = isChecked;
+            }
+            try {
+                const { error } = await supabase.from('cases').update({ qa: isChecked }).eq('id', id);
+                if (error) throw error;
+            } catch (e) {
+                console.error("QA update error:", e);
+                if (caseIdx > -1) state.cases[dataKey][caseIdx].qa = !isChecked; // Revert if failed
+                renderAllTables();
+                alert("Failed to update QA status. Make sure the 'qa' column exists in Supabase as a boolean!");
+            }
+        };
 
         function renderTable(pageId, dataKey) {
             const container = document.getElementById(pageId);
@@ -1997,19 +2031,80 @@
         document.querySelectorAll('.btn-import-trigger').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 state.importTarget = e.currentTarget.getAttribute('data-type');
-                document.getElementById('import-textarea').value = '';
                 
-                const textarea = document.getElementById('import-textarea');
+                let headers = [];
                 if (state.importTarget === 'reddit') {
-                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tStatus\tRequest type\tDate";
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Link', 'Status', 'Request type', 'Date'];
                 } else if (state.importTarget === 'review') {
-                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Text\tStatus\ttype of interaction\tDate\tPositive/ negative review";
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Text', 'Status', 'Type of interaction', 'Date', 'Positive/ negative review'];
                 } else {
-                    textarea.placeholder = "Name\tRelated to\tAction Taken\tReference link\tPost/thread Link\tFresh desk Link\tDate\tStatus\ttype of interaction\tRequest type";
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Link', 'Fresh desk Link', 'Date', 'Status', 'Type of interaction', 'Request type'];
+                }
+
+                const theadTr = document.getElementById('import-thead-tr');
+                theadTr.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+                
+                const tbody = document.getElementById('import-tbody');
+                tbody.innerHTML = '';
+                
+                for(let i=0; i<10; i++) {
+                    addImportRow(headers.length);
                 }
 
                 overlay.classList.add('active');
                 document.getElementById('import-modal').classList.add('active');
+            });
+        });
+
+        function addImportRow(colCount) {
+            if(!colCount) colCount = document.getElementById('import-thead-tr').children.length;
+            const tr = document.createElement('tr');
+            for (let j = 0; j < colCount; j++) {
+                const td = document.createElement('td');
+                td.contentEditable = "true";
+                tr.appendChild(td);
+            }
+            document.getElementById('import-tbody').appendChild(tr);
+        }
+
+        document.getElementById('btn-add-import-row').addEventListener('click', () => {
+            for(let i=0; i<10; i++) addImportRow();
+            const container = document.querySelector('.import-table-container');
+            container.scrollTop = container.scrollHeight;
+        });
+
+        document.getElementById('import-tbody').addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const rows = text.split(/\r\n|\n|\r/).filter(r => r.trim() !== '').map(row => row.split('\t'));
+            
+            let targetCell = e.target.closest('td');
+            let startRowIdx = 0;
+            if(targetCell) {
+               const tr = targetCell.parentElement;
+               startRowIdx = Array.from(tr.parentElement.children).indexOf(tr);
+            }
+            let startColIdx = targetCell ? targetCell.cellIndex : 0;
+
+            const tbody = document.getElementById('import-tbody');
+            const colCount = document.getElementById('import-thead-tr').children.length;
+
+            rows.forEach((row, i) => {
+                let tr = tbody.children[startRowIdx + i];
+                if (!tr) {
+                    tr = document.createElement('tr');
+                    for (let j = 0; j < colCount; j++) {
+                        const td = document.createElement('td');
+                        td.contentEditable = "true";
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+                row.forEach((cellData, j) => {
+                    if (startColIdx + j < colCount) {
+                        tr.children[startColIdx + j].innerText = cellData.trim();
+                    }
+                });
             });
         });
 
@@ -2026,53 +2121,60 @@
         };
 
         document.getElementById('btn-confirm-import').addEventListener('click', async () => {
-            const raw = document.getElementById('import-textarea').value.trim();
-            if (!raw) return closePanel();
+            const tbody = document.getElementById('import-tbody');
+            const rowEls = Array.from(tbody.querySelectorAll('tr'));
+            
+            const rowsData = [];
+            rowEls.forEach(tr => {
+                const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+                if (cols.some(c => c !== '')) rowsData.push(cols);
+            });
+
+            if (rowsData.length === 0) return closePanel();
             
             const selectedYear = document.getElementById('import-year').value;
-            const rows = raw.split('\n');
             const dbCasesToInsert = [];
             
-            rows.forEach(row => {
-                if (!row.trim()) return;
-                const cols = row.indexOf('\t') !== -1 ? row.split('\t') : row.split(',');
-                
+            rowsData.forEach(cols => {
+                const requiredLength = document.getElementById('import-thead-tr').children.length;
+                while(cols.length < requiredLength) cols.push('');
+
                 let dateVal, agent, related, action, status, type, req, refLink, postLink, fcLink, sentimentVal;
 
                 if (state.importTarget === 'reddit') {
-                    agent = cols[0] ? cols[0].trim() : '-';
-                    related = cols[1] ? cols[1].trim() : '-';
-                    action = cols[2] ? cols[2].trim() : '-';
-                    refLink = cols[3] ? cols[3].trim() : '';
-                    postLink = cols[4] ? cols[4].trim() : '';
+                    agent = cols[0] ? cols[0] : '-';
+                    related = cols[1] ? cols[1] : '-';
+                    action = cols[2] ? cols[2] : '-';
+                    refLink = cols[3] ? cols[3] : '';
+                    postLink = cols[4] ? cols[4] : '';
                     fcLink = ''; 
-                    status = cols[5] ? cols[5].trim() : 'Closed';
+                    status = cols[5] ? cols[5] : 'Closed';
                     type = '-'; 
-                    req = cols[6] ? cols[6].trim() : '-';
-                    dateVal = cols[7] ? cols[7].trim() : '';
+                    req = cols[6] ? cols[6] : '-';
+                    dateVal = cols[7] ? cols[7] : '';
                 } else if (state.importTarget === 'review') {
-                    agent = cols[0] ? cols[0].trim() : '-';
-                    related = cols[1] ? cols[1].trim() : '-';
-                    action = cols[2] ? cols[2].trim() : '-';
-                    refLink = cols[3] ? cols[3].trim() : '';
-                    postLink = cols[4] ? cols[4].trim() : '';
+                    agent = cols[0] ? cols[0] : '-';
+                    related = cols[1] ? cols[1] : '-';
+                    action = cols[2] ? cols[2] : '-';
+                    refLink = cols[3] ? cols[3] : '';
+                    postLink = cols[4] ? cols[4] : '';
                     fcLink = ''; 
-                    status = cols[5] ? cols[5].trim() : 'Closed';
-                    type = cols[6] ? cols[6].trim() : '-';
-                    dateVal = cols[7] ? cols[7].trim() : '';
-                    sentimentVal = cols[8] ? cols[8].trim() : 'Positive';
+                    status = cols[5] ? cols[5] : 'Closed';
+                    type = cols[6] ? cols[6] : '-';
+                    dateVal = cols[7] ? cols[7] : '';
+                    sentimentVal = cols[8] ? cols[8] : 'Positive';
                     req = '-'; 
                 } else {
-                    agent = cols[0] ? cols[0].trim() : '-';
-                    related = cols[1] ? cols[1].trim() : '-';
-                    action = cols[2] ? cols[2].trim() : '-';
-                    refLink = cols[3] ? cols[3].trim() : '';
-                    postLink = cols[4] ? cols[4].trim() : '';
-                    fcLink = cols[5] ? cols[5].trim() : '';
-                    dateVal = cols[6] ? cols[6].trim() : '';
-                    status = cols[7] ? cols[7].trim() : 'Closed';
-                    type = cols[8] ? cols[8].trim() : '-';
-                    req = cols[9] ? cols[9].trim() : '-';
+                    agent = cols[0] ? cols[0] : '-';
+                    related = cols[1] ? cols[1] : '-';
+                    action = cols[2] ? cols[2] : '-';
+                    refLink = cols[3] ? cols[3] : '';
+                    postLink = cols[4] ? cols[4] : '';
+                    fcLink = cols[5] ? cols[5] : '';
+                    dateVal = cols[6] ? cols[6] : '';
+                    status = cols[7] ? cols[7] : 'Closed';
+                    type = cols[8] ? cols[8] : '-';
+                    req = cols[9] ? cols[9] : '-';
                 }
 
                 if (!dateVal) {
@@ -2110,6 +2212,7 @@
                     status: status,
                     type: type,
                     req: req,
+                    qa: false,
                     links: { ref: refLink, post: postLink, fc: fcLink }
                 };
                 
@@ -2136,6 +2239,7 @@
                     action: entry.action,
                     req: entry.req,
                     status: entry.status,
+                    qa: entry.qa,
                     link_fc: entry.links.fc || null,
                     link_post: entry.links.post || null,
                     link_ref: entry.links.ref || null
@@ -2189,6 +2293,7 @@
                 action: document.getElementById('form-action').value || '-',
                 related: document.getElementById('form-related').value || '-',
                 status: state.newEntryStatus,
+                qa: state.editingId ? (state.cases[state.editingKey].find(c => c.id == state.editingId)?.qa || false) : false,
                 links: {
                     fc: document.getElementById('form-link-fc').value,
                     post: document.getElementById('form-link-post').value,
@@ -2213,6 +2318,7 @@
                 action: entry.action,
                 req: entry.req,
                 status: entry.status,
+                qa: entry.qa,
                 link_fc: entry.links.fc || null,
                 link_post: entry.links.post || null,
                 link_ref: entry.links.ref || null
@@ -2998,28 +3104,28 @@
             let filename = 'export.csv';
 
             if (activePage === 'page-fbig') {
-                headers = ['Date', 'Agent Name', 'Related To', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link', 'QA'];
                 filename = 'fbig_cases.csv';
                 data = getFilteredCases('fbig', false).map(c => [
-                    formatDate(c.date), c.agent, c.related || '-', c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
             } else if (activePage === 'page-reddit') {
-                headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Post / Thread Link', 'Reference Link'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Post / Thread Link', 'Reference Link', 'QA'];
                 filename = 'reddit_cases.csv';
                 data = getFilteredCases('reddit', false).map(c => [
-                    formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || ''
+                    formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
             } else if (activePage === 'page-review') {
-                headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Post/Thread Text', 'Status', 'Reference Link'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Post/Thread Text', 'Status', 'Reference Link', 'QA'];
                 filename = 'review_cases.csv';
                 data = getFilteredCases('review', false).map(c => [
-                    formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.links.post || '', c.status, c.links.ref || ''
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.links.post || '', c.status, c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
             } else if (activePage === 'page-pending') {
-                headers = ['Date', 'Source', 'Agent Name', 'Related To', 'Type', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link'];
+                headers = ['Date', 'Source', 'Agent Name', 'Related To', 'Type', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link', 'QA'];
                 filename = 'pending_cases.csv';
                 data = getFilteredCases('pending', true).map(c => [
-                    formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || ''
+                    formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
             } else if (activePage === 'page-weekly' || activePage === 'page-monthly') {
                 let csvStr = '';
