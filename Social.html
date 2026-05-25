@@ -1219,6 +1219,27 @@
         const actionRemapList = ["provided from retool", "provided from tempo app", "provided from shopify", "provided from coda"];
         const actionTargetName = "Provided Support From SOP";
 
+        const reportActionKeys = [
+            "Motivated Member",
+            "Provided Support From slack Channel",
+            "Provided Support From SOP",
+            "Provided Support From FAQ",
+            "Directed Customer To DM",
+            "Feedback raised on Slack"
+        ];
+
+        function mapReportAction(rawAction) {
+            if (!rawAction) return "OTHER";
+            const lower = rawAction.toLowerCase();
+            if (actionRemapList.includes(lower) || lower.includes("sop") || lower.includes("retool") || lower.includes("shopify") || lower.includes("coda") || lower.includes("tempo app") || lower.includes("kustomer")) return "Provided Support From SOP";
+            if (lower.includes("faq")) return "Provided Support From FAQ";
+            if (lower.includes("slack") && lower.includes("provided")) return "Provided Support From slack Channel";
+            if (lower.includes("slack") && (lower.includes("feedback") || lower.includes("sugg"))) return "Feedback raised on Slack";
+            if (lower.includes("dm") && (lower.includes("directed") || lower.includes("customer"))) return "Directed Customer To DM";
+            if (lower.includes("motivated")) return "Motivated Member";
+            return "OTHER";
+        }
+
         // --- RELATIONAL SUPABASE SYNC UTILS ---
         window.saveSettingsToSupabase = async function() {
             const settingsData = {
@@ -1947,7 +1968,7 @@
             
             document.getElementById('group-type').style.display = (type === 'fbig' || type === 'review') ? 'flex' : 'none';
             document.getElementById('group-sentiment').style.display = type === 'review' ? 'flex' : 'none';
-            document.getElementById('link-fc-row').style.display = type === 'fbig' ? 'flex' : 'none';
+            document.getElementById('link-fc-row').style.display = (type === 'fbig' || type === 'reddit') ? 'flex' : 'none';
 
             if(type === 'fbig' || type === 'review') {
                 const tSelect = document.getElementById('form-type');
@@ -2034,7 +2055,7 @@
                 
                 let headers = [];
                 if (state.importTarget === 'reddit') {
-                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Link', 'Status', 'Request type', 'Date'];
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Link', 'Freshchat Link', 'Status', 'Request type', 'Date'];
                 } else if (state.importTarget === 'review') {
                     headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Text', 'Status', 'Type of interaction', 'Date', 'Positive/ negative review'];
                 } else {
@@ -2147,18 +2168,18 @@
                     action = cols[2] ? cols[2] : '-';
                     refLink = cols[3] ? cols[3] : '';
                     postLink = cols[4] ? cols[4] : '';
-                    fcLink = ''; 
-                    status = cols[5] ? cols[5] : 'Closed';
+                    fcLink = cols[5] ? cols[5] : ''; 
+                    status = cols[6] ? cols[6] : 'Closed';
                     type = '-'; 
-                    req = cols[6] ? cols[6] : '-';
-                    dateVal = cols[7] ? cols[7] : '';
+                    req = cols[7] ? cols[7] : '-';
+                    dateVal = cols[8] ? cols[8] : '';
                 } else if (state.importTarget === 'review') {
                     agent = cols[0] ? cols[0] : '-';
                     related = cols[1] ? cols[1] : '-';
                     action = cols[2] ? cols[2] : '-';
                     refLink = cols[3] ? cols[3] : '';
                     postLink = cols[4] ? cols[4] : '';
-                    fcLink = ''; 
+                    fcLink = '';
                     status = cols[5] ? cols[5] : 'Closed';
                     type = cols[6] ? cols[6] : '-';
                     dateVal = cols[7] ? cols[7] : '';
@@ -2532,12 +2553,7 @@
 
             const relData = {}; state.relatedTo.forEach(r => relData[r] = [0,0,0,0,0,0]);
             const actData = {}; 
-            state.actions.forEach(a => {
-                if (!actionRemapList.includes(a.trim().toLowerCase())) {
-                    actData[a] = [0,0,0,0,0,0];
-                }
-            });
-            if (!actData[actionTargetName]) actData[actionTargetName] = [0,0,0,0,0,0];
+            reportActionKeys.forEach(k => actData[k] = [0,0,0,0,0,0]);
             const weeklyTotals = [0,0,0,0,0,0];
             const latestReqs = {};
             
@@ -2558,15 +2574,10 @@
                     
                     let mAct = c.action ? c.action.trim() : null;
                     if (mAct) {
-                        const lowerAct = mAct.toLowerCase();
-                        if (actionRemapList.includes(lowerAct)) {
-                            mAct = actionTargetName;
-                        } else {
-                            mAct = actMap[lowerAct] || mAct;
+                        const mappedAct = mapReportAction(mAct);
+                        if (mappedAct !== "OTHER") {
+                            actData[mappedAct][wIdx]++;
                         }
-                        
-                        if (!actData[mAct]) actData[mAct] = [0,0,0,0,0,0];
-                        actData[mAct][wIdx]++;
                     }
                     
                     if (wIdx === 5 && c.req && c.req !== '-') {
@@ -2716,12 +2727,14 @@
             });
         }
 
-        function renderMonthlyReview(tab) {
+        function renderMonthlyReview(tab, targetContainerId = 'mo-container', skipCharts = false) {
             const targetD = new Date(state.viewState.monthlyDate + 'T12:00:00');
             const targetMonth = targetD.getMonth();
             const targetYear = targetD.getFullYear();
             
-            document.getElementById('mo-range-label').textContent = targetD.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+            if (!skipCharts) {
+                document.getElementById('mo-range-label').textContent = targetD.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+            }
 
             if (tab === 'review') {
                 let targetCases = state.cases.review.map(c=>({...c, _source:'review'}));
@@ -2787,7 +2800,9 @@
                         </div>
                     </div>
                 `;
-                document.getElementById('mo-container').innerHTML = html;
+                document.getElementById(targetContainerId).innerHTML = html;
+
+                if (skipCharts) return;
 
                 destroyChart('mo1');
                 destroyChart('mo-chart-rel');
@@ -2857,12 +2872,7 @@
 
             const relData = {}; state.relatedTo.forEach(r => relData[r] = new Array(bucketStarts.length).fill(0));
             const actData = {}; 
-            state.actions.forEach(a => {
-                if (!actionRemapList.includes(a.trim().toLowerCase())) {
-                    actData[a] = new Array(bucketStarts.length).fill(0);
-                }
-            });
-            if (!actData[actionTargetName]) actData[actionTargetName] = new Array(bucketStarts.length).fill(0);
+            reportActionKeys.forEach(k => actData[k] = new Array(bucketStarts.length).fill(0));
             const weeklyTotals = new Array(bucketStarts.length).fill(0);
             
             const topReqsMap = {};
@@ -2892,15 +2902,10 @@
                 
                 let mAct = c.action ? c.action.trim() : null;
                 if (mAct) {
-                    const lowerAct = mAct.toLowerCase();
-                    if (actionRemapList.includes(lowerAct)) {
-                        mAct = actionTargetName;
-                    } else {
-                        mAct = actMap[lowerAct] || mAct;
+                    const mappedAct = mapReportAction(mAct);
+                    if (mappedAct !== "OTHER") {
+                        actData[mappedAct][wIdx]++;
                     }
-
-                    if (!actData[mAct]) actData[mAct] = new Array(bucketStarts.length).fill(0);
-                    actData[mAct][wIdx]++;
                 }
                 
                 if (c.req && c.req !== '-') {
@@ -2979,7 +2984,9 @@
                 <div><canvas id="mo-chart" height="250"></canvas></div>
             </div>`;
 
-            document.getElementById('mo-container').innerHTML = html;
+            document.getElementById(targetContainerId).innerHTML = html;
+
+            if (skipCharts) return;
 
             destroyChart('mo1');
             destroyChart('mo-chart-rel');
@@ -3110,10 +3117,10 @@
                     formatDate(c.date), c.agent, c.related || '-', c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
             } else if (activePage === 'page-reddit') {
-                headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Post / Thread Link', 'Reference Link', 'QA'];
+                headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link', 'QA'];
                 filename = 'reddit_cases.csv';
                 data = getFilteredCases('reddit', false).map(c => [
-                    formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
+                    formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
             } else if (activePage === 'page-review') {
                 headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Post/Thread Text', 'Status', 'Reference Link', 'QA'];
@@ -3127,7 +3134,7 @@
                 data = getFilteredCases('pending', true).map(c => [
                     formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
-            } else if (activePage === 'page-weekly' || activePage === 'page-monthly') {
+            } else if (activePage === 'page-weekly') {
                 let csvStr = '';
                 const tables = container.querySelectorAll('.da-table');
                 if(tables.length === 0) return alert('No data to export here.');
@@ -3143,7 +3150,52 @@
                     csvStr += '\n';
                 });
                 
-                filename = activePage === 'page-weekly' ? 'weekly_review.csv' : 'monthly_review.csv';
+                filename = 'weekly_review.csv';
+                
+                const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            } else if (activePage === 'page-monthly') {
+                let csvStr = '';
+                const tabs = ['all', 'fb', 'ig', 'reddit', 'review'];
+                const tabNames = {'all': 'FB & Instagram', 'fb': 'Facebook', 'ig': 'Instagram', 'reddit': 'Reddit', 'review': 'Reviews'};
+                
+                const tempContainer = document.createElement('div');
+                tempContainer.id = 'temp-export-container';
+                tempContainer.style.display = 'none';
+                document.body.appendChild(tempContainer);
+                
+                tabs.forEach(t => {
+                    csvStr += `--- ${tabNames[t].toUpperCase()} ---\n\n`;
+                    renderMonthlyReview(t, 'temp-export-container', true);
+                    
+                    const tables = tempContainer.querySelectorAll('.da-table');
+                    tables.forEach(table => {
+                        const rows = table.querySelectorAll('tr');
+                        rows.forEach(tr => {
+                            const rowData = [];
+                            const cols = tr.querySelectorAll('th, td');
+                            cols.forEach(c => rowData.push('"' + c.innerText.replace(/"/g, '""') + '"'));
+                            csvStr += rowData.join(',') + '\n';
+                        });
+                        csvStr += '\n';
+                    });
+                    csvStr += '\n\n';
+                });
+                
+                document.body.removeChild(tempContainer);
+                
+                // Restore active tab view
+                const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
+                renderMonthlyReview(activeTab);
+                
+                filename = 'monthly_review_full.csv';
                 
                 const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
