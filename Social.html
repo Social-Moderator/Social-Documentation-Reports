@@ -2557,7 +2557,7 @@
             const weeklyTotals = [0,0,0,0,0,0];
             const latestReqs = {};
             
-            const allCases = [...state.cases.fbig, ...state.cases.reddit, ...state.cases.review];
+            const allCases = [...state.cases.fbig];
             
             allCases.forEach(c => {
                 const wKey = getMonday(c.date);
