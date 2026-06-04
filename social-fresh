@@ -1,0 +1,3307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SM Tracker</title>
+    <link rel="icon" type="image/png" href="2132948.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* CSS Reset & Variables (Light Mode Default) */
+        :root {
+            --bg-sidebar: #F5F5F3;
+            --bg-main: #FFFFFF;
+            --bg-hover: #F9F9F9;
+            --border-light: #E5E5E3;
+            --text-main: #111111;
+            --text-muted: #888888;
+            
+            --purple-main: #534AB7;
+            --purple-text: #3C3489;
+            --purple-bg: #EEEDFE;
+            --purple-border: #AFA9EC;
+            
+            --green-text: #3B6D11;
+            --green-bg: #EAF3DE;
+            --green-req-text: #0F6E56;
+            --green-req-bg: #E1F5EE;
+            
+            --amber-text: #854F0B;
+            --amber-bg: #FAEEDA;
+            
+            --red-text: #A32D2D;
+            --red-bg: #FCEBEB;
+            
+            --blue-text: #185FA5;
+            --blue-bg: #E6F1FB;
+            
+            --overlay-color: rgba(0, 0, 0, 0.18);
+            
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Dark Mode Override */
+        [data-theme="dark"] {
+            --bg-sidebar: #1A1D21;
+            --bg-main: #131517;
+            --bg-hover: #22262B;
+            --border-light: #2A2E33;
+            --text-main: #E2E4E9;
+            --text-muted: #8B949E;
+            
+            --purple-bg: #2B265C;
+            --purple-text: #A8A1E6;
+            --purple-border: #4A448A;
+            
+            --green-bg: #22361A;
+            --green-text: #8EC25B;
+            --green-req-bg: #153A2F;
+            --green-req-text: #5CC2A4;
+            
+            --amber-bg: #4D3310;
+            --amber-text: #E6AA5C;
+            
+            --red-bg: #4A1A1A;
+            --red-text: #E67A7A;
+            
+            --blue-bg: #1A385A;
+            --blue-text: #6BA4DF;
+            
+            --overlay-color: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-size: 13px;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 182px;
+            flex-shrink: 0;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding-top: 16px;
+            overflow-y: auto;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            margin-bottom: 24px;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .nav-section {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0 16px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-item {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            cursor: pointer;
+            color: var(--text-muted);
+            border-left: 2px solid transparent;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            border-left-color: var(--purple-main);
+            color: var(--purple-text);
+            background-color: var(--purple-bg);
+            font-weight: 500;
+        }
+        
+        .nav-sub-item {
+            padding-left: 38px;
+            display: none;
+        }
+        
+        .nav-parent[data-expanded="true"] + .nav-sub-item,
+        .nav-parent[data-expanded="true"] + .nav-sub-item + .nav-sub-item {
+            display: flex;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: relative;
+            background-color: var(--bg-main);
+        }
+
+        .page-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        .page-view.active {
+            display: flex;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-light);
+            background-color: var(--bg-main);
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .page-title h1 {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .page-title span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .btn-purple {
+            background-color: var(--purple-main);
+            border-color: var(--purple-main);
+            color: white;
+        }
+        
+        .btn-icon {
+            padding: 4px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn-icon:hover:not(:disabled) { color: var(--purple-main); background: var(--bg-sidebar); }
+        .btn-icon:disabled { color: var(--border-light); cursor: not-allowed; background: transparent; }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-light);
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .search-container svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            fill: var(--text-muted);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 6px 10px 6px 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border-light);
+            background-color: var(--bg-main);
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .chip.active {
+            background-color: var(--purple-bg);
+            color: var(--purple-text);
+            border-color: var(--purple-border);
+        }
+
+        /* Data Table */
+        .table-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: var(--bg-main);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: var(--bg-main);
+            padding: 8px 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            text-align: left;
+        }
+
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 12px;
+            text-align: left;
+        }
+
+        tbody tr:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .col-date { color: var(--text-muted); }
+        .col-name { font-weight: 500; }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-default { background-color: var(--border-light); color: var(--text-main); }
+        .badge-type { background-color: var(--purple-bg); color: var(--purple-text); }
+        .badge-req { background-color: var(--green-req-bg); color: var(--green-req-text); }
+        .badge-closed { background-color: var(--green-bg); color: var(--green-text); }
+        .badge-pending-internal { background-color: var(--amber-bg); color: var(--amber-text); }
+        .badge-pending-member { background-color: var(--blue-bg); color: var(--blue-text); }
+        
+        .badge-positive { background-color: var(--green-bg); color: var(--green-text); }
+        .badge-negative { background-color: var(--red-bg); color: var(--red-text); }
+
+        .links-col a {
+            color: var(--purple-main);
+            text-decoration: none;
+            font-size: 11px;
+            margin-right: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        /* Status Bar with Pagination */
+        .status-bar {
+            padding: 7px 20px;
+            background-color: var(--bg-main);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            gap: 6px;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dot-green {
+            width: 6px;
+            height: 6px;
+            background-color: #639922;
+            border-radius: 50%;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--overlay-color);
+            z-index: 100;
+            display: none;
+        }
+        .overlay.active { display: block; }
+
+        /* Advanced Filter Modal */
+        .filter-modal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 650px; max-height: 85vh; background: var(--bg-main); border-radius: 12px;
+            z-index: 102; display: none; flex-direction: column; border: 1px solid var(--border-light);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .filter-modal.active { display: flex; }
+        
+        /* Advanced Filter Multi-Select Custom Dropdowns */
+        .multi-select-wrapper { position: relative; width: 100%; }
+        .ms-header {
+            padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-light);
+            font-size: 13px; background: var(--bg-main); color: var(--text-main);
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        }
+        .ms-header::after { content: "▼"; font-size: 10px; color: var(--text-muted); }
+        .ms-dropdown {
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: var(--bg-main); border: 1px solid var(--border-light);
+            border-radius: 8px; margin-top: 4px; z-index: 1000;
+            display: none; flex-direction: column; padding: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .ms-dropdown.active { display: flex; }
+        .ms-search { margin-bottom: 8px; }
+
+        .checkbox-list { 
+            max-height: 160px; overflow-y: auto; background: var(--bg-main); display: flex; 
+            flex-direction: column; gap: 6px; border: none; padding: 0; margin: 0;
+        }
+        .checkbox-item { 
+            display: flex; align-items: center; gap: 8px; font-size: 12px; 
+            cursor: pointer; text-transform: none; color: var(--text-main); letter-spacing: normal; 
+        }
+        .checkbox-item input { cursor: pointer; }
+
+        /* Custom Delete Confirm Modal */
+        .delete-modal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 320px; background: var(--bg-main); border-radius: 12px;
+            z-index: 103; display: none; flex-direction: column; border: 1px solid var(--border-light);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; padding: 24px;
+        }
+        .delete-modal.active { display: flex; }
+
+        /* Slide Panel */
+        .side-panel {
+            position: absolute;
+            top: 0; right: -370px;
+            width: 370px; height: 100%;
+            background-color: var(--bg-main);
+            border-left: 1px solid var(--border-light);
+            z-index: 101;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s ease;
+        }
+        .side-panel.active { right: 0; }
+
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px; border-bottom: 1px solid var(--border-light);
+        }
+        .panel-title { font-size: 14px; font-weight: 500; }
+        .btn-close {
+            width: 28px; height: 28px; border: 1px solid var(--border-light); border-radius: 8px;
+            background: var(--bg-main); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-muted);
+        }
+
+        .panel-body {
+            flex-grow: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+        .form-group label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        
+        .form-control {
+            width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-light);
+            font-size: 13px; font-family: inherit; outline: none; background: var(--bg-main); color: var(--text-main);
+        }
+        .form-control.error { border-color: var(--red-text); }
+        
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23777777%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat; background-position: right 10px top 50%; background-size: 8px auto; padding-right: 24px;
+        }
+
+        .status-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+        .status-btn {
+            padding: 4px 12px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border-light);
+            background: var(--bg-main); color: var(--text-muted); cursor: pointer;
+        }
+        
+        /* Dynamic Status Coloring */
+        .status-btn.selected { background-color: var(--purple-bg); color: var(--purple-text); border-color: transparent; }
+        .status-btn[data-value="Closed"].selected { background-color: var(--green-bg); color: var(--green-text); }
+        .status-btn[data-value="Pending internal action"].selected { background-color: var(--amber-bg); color: var(--amber-text); }
+        .status-btn[data-value="Pending member action"].selected { background-color: var(--blue-bg); color: var(--blue-text); }
+        
+        .sentiment-btn[data-value="Positive"].selected { background-color: var(--green-bg); color: var(--green-text); border-color: transparent; }
+        .sentiment-btn[data-value="Negative"].selected { background-color: var(--red-bg); color: var(--red-text); border-color: transparent; }
+
+        .link-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+        .link-row label { text-transform: none; letter-spacing: normal; }
+
+        .panel-footer {
+            padding: 16px; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 8px; background-color: var(--bg-main);
+        }
+
+        /* Autocomplete Custom Dropdowns */
+        .custom-select-wrapper { position: relative; }
+        .autocomplete-list {
+            position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto;
+            background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 8px; margin-top: 4px;
+            z-index: 1000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); list-style: none; padding: 0;
+        }
+        .autocomplete-list.active { display: block; }
+        .autocomplete-item { padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--text-main); }
+        .autocomplete-item:hover { background-color: var(--bg-hover); }
+
+        /* Data Analysis & Edit Data Pages */
+        .da-container { padding: 20px; overflow-y: auto; background-color: var(--bg-sidebar); height: 100%; }
+        
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 8px; padding: 16px;
+        }
+        .stat-card h3 { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+        .stat-card .val { font-size: 24px; font-weight: 500; color: var(--text-main); }
+        .stat-card .val span { font-size: 14px; color: var(--purple-text); background: var(--purple-bg); padding: 2px 6px; border-radius: 999px; margin-left: 8px; vertical-align: middle; font-weight: normal; }
+
+        .da-section { background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 24px; overflow-x: auto; overflow-y: hidden; }
+        .da-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        
+        /* Analysis Tables Alignment */
+        .da-table th { background: var(--bg-main); padding: 10px 16px; border-bottom: 1px solid var(--border-light); text-transform: uppercase; font-size: 10px; color: var(--text-muted); text-align: center; }
+        .da-table th:first-child { text-align: left; font-weight: 500; }
+        .da-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); text-align: center; }
+        .da-table td:first-child { text-align: left; font-weight: 500; }
+        
+        .da-table tr.total-row { font-weight: bold; }
+        .da-table tr:hover { background-color: var(--bg-hover); }
+
+        .chart-container { padding: 20px; border-bottom: 1px solid var(--border-light); }
+        .chart-container:last-child { border-bottom: none; }
+        
+        .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px; }
+
+        /* Edit Data Cards */
+        .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .edit-card { background: var(--bg-main); border: 1px solid var(--border-light); border-radius: 8px; display: flex; flex-direction: column; max-height: 400px; }
+        .edit-card-header { padding: 16px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .edit-card-header h3 { font-size: 14px; font-weight: 500; }
+        .edit-card-body { flex-grow: 1; overflow-y: auto; padding: 8px 0; }
+        .edit-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; }
+        .edit-item:hover { background: var(--bg-sidebar); }
+        .edit-item span { font-size: 13px; }
+        .edit-card-footer { padding: 16px; border-top: 1px solid var(--border-light); display: flex; gap: 8px; }
+
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 1px solid var(--border-light); background: var(--bg-main); padding: 0 20px; flex-shrink: 0; }
+        .tab { padding: 12px 16px; cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent; font-size: 13px; }
+        .tab.active { color: var(--purple-main); border-bottom-color: var(--purple-main); font-weight: 500; }
+
+        .list-table { width: 100%; border-collapse: collapse; }
+        .list-table td { padding: 8px 0; border-bottom: 1px solid var(--border-light); text-align: left; }
+        .list-table td:last-child { text-align: right; }
+        
+        /* Grid Import Styles */
+        .import-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .import-table th { background: var(--bg-sidebar); border: 1px solid var(--border-light); border-top: none; border-bottom: 1px solid var(--border-light); padding: 8px; font-size: 11px; white-space: nowrap; position: sticky; top: 0; z-index: 2; text-transform: uppercase; color: var(--text-muted); }
+        .import-table td { border: 1px solid var(--border-light); padding: 6px 8px; font-size: 12px; min-width: 100px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none; }
+        .import-table td:focus { border: 1px solid var(--purple-main); background: var(--purple-bg); color: var(--purple-text); overflow: visible; white-space: normal; position: relative; z-index: 1; box-shadow: inset 0 0 0 1px var(--purple-main); }
+    </style>
+</head>
+<body>
+
+    <div id="auth-view" style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background-color: var(--bg-sidebar);">
+        <div style="background: var(--bg-main); padding: 32px; border-radius: 12px; border: 1px solid var(--border-light); width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; font-size: 18px; margin-bottom: 24px; color: var(--text-main);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--purple-main)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                SM Tracker
+            </div>
+            <form id="login-form">
+                <div class="form-group" style="margin-bottom: 16px; text-align: left;">
+                    <label style="display: block; margin-bottom: 6px;">Email</label>
+                    <input type="email" id="auth-email" class="form-control" required style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom: 24px; text-align: left;">
+                    <label style="display: block; margin-bottom: 6px;">Password</label>
+                    <input type="password" id="auth-password" class="form-control" required style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div id="auth-error" style="color: var(--red-text); font-size: 12px; margin-bottom: 16px; text-align: center; display: none;"></div>
+                <button type="submit" class="btn btn-purple" style="width: 100%; justify-content: center; padding: 10px; font-size: 14px;">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-container" id="app-container" style="display: none;">
+        
+        <div class="sidebar">
+            <div class="logo-container">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--purple-main)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                SM Tracker
+            </div>
+
+            <div class="nav-section">MAIN</div>
+            <div class="nav-item active nav-link" data-target="page-fbig">FB/IG Cases</div>
+            <div class="nav-item nav-link" data-target="page-reddit">Reddit Cases</div>
+            <div class="nav-item nav-link" data-target="page-review">Review Cases</div>
+
+            <div class="nav-section">VIEWS</div>
+            <div class="nav-item nav-link" data-target="page-pending">Pending Cases</div>
+
+            <div class="nav-section">TOOLS</div>
+            <div class="nav-item nav-parent" data-expanded="false" id="nav-data-analysis">Data Analysis</div>
+            <div class="nav-item nav-sub-item nav-link" data-target="page-weekly">Weekly Review</div>
+            <div class="nav-item nav-sub-item nav-link" data-target="page-monthly">Monthly Review</div>
+            
+            <div class="nav-item nav-link" data-target="page-edit">Edit Data</div>
+            <div class="nav-item nav-link" data-target="page-settings">Settings</div>
+            
+            <div style="flex-grow: 1;"></div>
+            <div class="nav-item" id="btn-logout" style="margin-bottom: 16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Log Out
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <div id="page-fbig" class="page-view active">
+                <div class="top-bar">
+                    <div class="page-title"><h1>FB/IG Cases</h1></div>
+                    <div class="actions">
+                        <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
+                        <button class="btn btn-import-trigger" data-type="fbig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Import</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-purple btn-new-entry" data-type="fbig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New Entry</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-chips">
+                        <div class="chip active" data-filter="All">All</div>
+                        <div class="chip" data-filter="DM">DM</div>
+                        <div class="chip" data-filter="Page comments">Page comments</div>
+                        <div class="chip" data-filter="Group comments">Group comments</div>
+                        <div class="chip" data-filter="Instagram">Instagram</div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type of Interaction</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
+                        </thead>
+                        <tbody class="table-body"></tbody>
+                    </table>
+                </div>
+                <div class="status-bar">
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-reddit" class="page-view">
+                <div class="top-bar">
+                    <div class="page-title"><h1>Reddit Cases</h1></div>
+                    <div class="actions">
+                        <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
+                        <button class="btn btn-import-trigger" data-type="reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Import</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-purple btn-new-entry" data-type="reddit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New Entry</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-chips">
+                        <div class="chip active" data-filter="All">All</div>
+                        <div class="chip" data-filter="Community Management">Community Mgmt</div>
+                        <div class="chip" data-filter="Support General Inquiry">Support General</div>
+                        <div class="chip" data-filter="Product Support Related">Product Support</div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
+                        </thead>
+                        <tbody class="table-body"></tbody>
+                    </table>
+                </div>
+                <div class="status-bar">
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-review" class="page-view">
+                <div class="top-bar">
+                    <div class="page-title"><h1>Review Cases</h1></div>
+                    <div class="actions">
+                        <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
+                        <button class="btn btn-import-trigger" data-type="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Import</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                        <button class="btn btn-purple btn-new-entry" data-type="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New Entry</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <div class="filter-chips">
+                        <div class="chip active" data-filter="All">All</div>
+                        <div class="chip" data-filter="Google Review">Google Review</div>
+                        <div class="chip" data-filter="iOS Review">iOS Review</div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Sentiment</th><th>Action Taken</th><th>Post/Thread Text</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
+                        </thead>
+                        <tbody class="table-body"></tbody>
+                    </table>
+                </div>
+                <div class="status-bar">
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending internal · 0 pending member</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-pending" class="page-view">
+                <div class="top-bar">
+                    <div class="page-title"><h1>All Pending Cases</h1><span class="entry-count">· 0 entries</span></div>
+                    <div class="actions">
+                        <button class="btn btn-adv-filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>Filter</button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>Source</th><th>Agent Name</th><th>Related To</th><th>Type</th><th>Request Type</th><th>Action Taken</th><th>Status</th><th>Links</th><th>QA</th><th></th></tr>
+                        </thead>
+                        <tbody class="table-body"></tbody>
+                    </table>
+                </div>
+                <div class="status-bar">
+                    <div class="status-left">
+                        <div class="dot-green"></div> Connected <span class="status-counts">· 0 pending entries combined</span>
+                    </div>
+                    <div class="pagination-controls">
+                        <span>Rows per page:</span>
+                        <select class="rows-per-page form-control" style="width:auto; padding:2px 24px 2px 8px; font-size:11px; min-height: 24px;">
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <span class="page-info">Page 1 of 1</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon btn-prev-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                            <button class="btn-icon btn-next-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-weekly" class="page-view" style="background: var(--bg-sidebar);">
+                <div class="top-bar" style="background: var(--bg-main);">
+                    <div class="page-title"><h1>Weekly Review</h1></div>
+                    <div class="actions">
+                        <button class="btn btn-icon" id="btn-wk-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <span id="wk-range-label" style="font-weight: 500;">Mar 30 – May 4</span>
+                        <button class="btn btn-icon" id="btn-wk-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                    </div>
+                </div>
+                <div class="da-container">
+                    <div class="stat-grid" id="wk-stats"></div>
+                    <div class="da-section" id="wk-tables"></div>
+                    <div class="da-section chart-container"><canvas id="wk-chart1" height="80"></canvas></div>
+                    <div class="da-section chart-container"><canvas id="wk-chart2" height="100"></canvas></div>
+                    <div class="da-section chart-container"><canvas id="wk-chart3" height="120"></canvas></div>
+                    <div class="da-section two-col-grid" id="wk-latest"></div>
+                </div>
+            </div>
+
+            <div id="page-monthly" class="page-view" style="background: var(--bg-sidebar);">
+                <div class="top-bar" style="background: var(--bg-main); border-bottom: none;">
+                    <div class="page-title"><h1>Monthly Review</h1></div>
+                    <div class="actions">
+                        <button class="btn btn-icon" id="btn-mo-prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <span id="mo-range-label" style="font-weight: 500;">April 2026</span>
+                        <button class="btn btn-icon" id="btn-mo-next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        <button class="btn btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Export</button>
+                    </div>
+                </div>
+                <div class="tabs">
+                    <div class="tab active" data-tab="all">FB & Instagram</div>
+                    <div class="tab" data-tab="fb">Facebook</div>
+                    <div class="tab" data-tab="ig">Instagram</div>
+                    <div class="tab" data-tab="reddit">Reddit</div>
+                    <div class="tab" data-tab="review">Reviews</div>
+                </div>
+                <div class="da-container" id="mo-container">
+                    </div>
+            </div>
+
+            <div id="page-edit" class="page-view" style="background: var(--bg-sidebar);">
+                <div class="top-bar" style="background: var(--bg-main);">
+                    <div class="page-title">
+                        <h1>Edit Data</h1>
+                        <span>Manage dropdown options used across all pages</span>
+                    </div>
+                </div>
+                <div class="da-container">
+                    <div class="edit-grid">
+                        <div class="edit-card">
+                            <div class="edit-card-header"><h3>Agent Names</h3><span class="badge badge-type" id="cnt-agent">0</span></div>
+                            <div class="edit-card-body" id="list-agent"></div>
+                            <div class="edit-card-footer">
+                                <input type="text" class="form-control" id="inp-add-agent" placeholder="New agent name...">
+                                <button class="btn btn-purple" onclick="addEditItem('agents', 'inp-add-agent')">Add</button>
+                            </div>
+                        </div>
+                        <div class="edit-card">
+                            <div class="edit-card-header"><h3>Related To</h3><span class="badge badge-type" id="cnt-related">0</span></div>
+                            <div class="edit-card-body" id="list-related"></div>
+                            <div class="edit-card-footer">
+                                <input type="text" class="form-control" id="inp-add-related" placeholder="New category...">
+                                <button class="btn btn-purple" onclick="addEditItem('relatedTo', 'inp-add-related')">Add</button>
+                            </div>
+                        </div>
+                        <div class="edit-card">
+                            <div class="edit-card-header"><h3>Action Taken</h3><span class="badge badge-type" id="cnt-action">0</span></div>
+                            <div class="edit-card-body" id="list-action"></div>
+                            <div class="edit-card-footer">
+                                <input type="text" class="form-control" id="inp-add-action" placeholder="New action...">
+                                <button class="btn btn-purple" onclick="addEditItem('actions', 'inp-add-action')">Add</button>
+                            </div>
+                        </div>
+                        <div class="edit-card">
+                            <div class="edit-card-header">
+                                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <h3>Request Types</h3><span class="badge badge-type" id="cnt-req">0</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="search-edit-req" placeholder="Search request types..." style="padding: 4px 8px; font-size: 11px;">
+                                </div>
+                            </div>
+                            <div class="edit-card-body" id="list-req"></div>
+                            <div class="edit-card-footer">
+                                <input type="text" class="form-control" id="inp-add-req" placeholder="New request type...">
+                                <button class="btn btn-purple" onclick="addEditItem('requestTypes', 'inp-add-req')">Add</button>
+                            </div>
+                        </div>
+                        <div class="edit-card">
+                            <div class="edit-card-header"><h3>Statuses</h3><span class="badge badge-type" id="cnt-status">0</span></div>
+                            <div class="edit-card-body" id="list-status"></div>
+                            <div class="edit-card-footer">
+                                <input type="text" class="form-control" id="inp-add-status" placeholder="New status...">
+                                <button class="btn btn-purple" onclick="addEditItem('statuses', 'inp-add-status')">Add</button>
+                            </div>
+                        </div>
+                        <div class="edit-card">
+                            <div class="edit-card-header"><h3>Type of Interaction</h3><span class="badge badge-type" id="cnt-interaction">0</span></div>
+                            <div class="edit-card-body" id="list-interaction"></div>
+                            <div class="edit-card-footer">
+                                <input type="text" class="form-control" id="inp-add-interaction" placeholder="New type...">
+                                <button class="btn btn-purple" onclick="addEditItem('interactionTypes', 'inp-add-interaction')">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="page-settings" class="page-view" style="background: var(--bg-sidebar);">
+                <div class="top-bar" style="background: var(--bg-main);">
+                    <div class="page-title">
+                        <h1>Settings</h1>
+                        <span>App preferences and appearance</span>
+                    </div>
+                </div>
+                <div class="da-container">
+                    <div class="edit-grid" style="grid-template-columns: 1fr;">
+                        <div class="edit-card" style="max-width: 400px;">
+                            <div class="edit-card-header"><h3>Appearance</h3></div>
+                            <div class="edit-card-body" style="padding: 16px;">
+                                <div class="form-group">
+                                    <label>Theme</label>
+                                    <select id="setting-theme" class="form-control">
+                                        <option value="light">Light Mode</option>
+                                        <option value="dark">Dark Mode</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overlay" id="overlay"></div>
+
+            <div class="delete-modal" id="delete-modal">
+                <h3 style="margin-bottom: 12px; font-size: 16px;">Delete Entry</h3>
+                <p style="color: var(--text-muted); margin-bottom: 24px;">Are you sure you want to delete this case? This action cannot be undone.</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button class="btn" id="btn-cancel-del">Cancel</button>
+                    <button class="btn" id="btn-confirm-del" style="background: var(--red-bg); color: var(--red-text); border-color: transparent;">Delete</button>
+                </div>
+            </div>
+
+            <div class="filter-modal" id="filter-modal">
+                <div class="panel-header">
+                    <div class="panel-title">Advanced Filters</div>
+                    <button class="btn-close" id="btn-close-filter">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div class="panel-body">
+                    <div class="form-row">
+                        <div class="form-group"><label>Start Date</label><input type="date" id="adv-start" class="form-control"></div>
+                        <div class="form-group"><label>End Date</label><input type="date" id="adv-end" class="form-control"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Agent Name</label>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select agents...">Select agents...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search agents...">
+                                    <div class="checkbox-list" id="adv-agents"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select statuses...">Select statuses...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search statuses...">
+                                    <div class="checkbox-list" id="adv-statuses"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Related To</label>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select related to...">Select related to...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search related to...">
+                                    <div class="checkbox-list" id="adv-related"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Action Taken</label>
+                            <div class="multi-select-wrapper">
+                                <div class="ms-header" data-placeholder="Select actions...">Select actions...</div>
+                                <div class="ms-dropdown">
+                                    <input type="text" class="form-control ms-search" placeholder="Search actions...">
+                                    <div class="checkbox-list" id="adv-actions"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="adv-req-group">
+                        <label>Request Type <span style="font-weight:normal;color:var(--text-muted);text-transform:none;">(Search to filter list)</span></label>
+                        <div class="multi-select-wrapper">
+                            <div class="ms-header" data-placeholder="Select request types...">Select request types...</div>
+                            <div class="ms-dropdown">
+                                <input type="text" class="form-control ms-search" placeholder="Search request types...">
+                                <div class="checkbox-list" id="adv-reqs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" id="adv-sentiment-group" style="display:none;">
+                        <label>Sentiment</label>
+                        <div class="multi-select-wrapper">
+                            <div class="ms-header" data-placeholder="Select sentiments...">Select sentiments...</div>
+                            <div class="ms-dropdown">
+                                <div class="checkbox-list" id="adv-sentiments"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <button class="btn" id="btn-clear-adv">Clear All</button>
+                    <button class="btn btn-purple" id="btn-apply-adv">Apply Filters</button>
+                </div>
+            </div>
+
+            <div class="delete-modal" id="import-modal" style="width: 95%; max-width: 1200px; text-align: left; padding: 20px;">
+                <div class="panel-header" style="padding:0; border:none; margin-bottom:12px;">
+                    <h3 style="margin: 0; font-size: 16px;">Import Data</h3>
+                    <button class="btn-close" id="btn-close-import" style="width: 24px; height: 24px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px;">
+                    <p style="color: var(--text-muted); margin: 0; font-size: 12px;">Paste your spreadsheet data below (Ctrl+V) or click cells to edit directly.</p>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 11px; color: var(--text-muted); font-weight: 500;">YEAR:</label>
+                        <select id="import-year" class="form-control" style="width: 80px; padding: 4px 8px; font-size: 12px;"></select>
+                    </div>
+                </div>
+                <div class="import-table-container" style="overflow:auto; height: 350px; border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 16px; background: var(--bg-main);">
+                    <table class="import-table" id="import-table">
+                        <thead><tr id="import-thead-tr"></tr></thead>
+                        <tbody id="import-tbody"></tbody>
+                    </table>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: space-between; align-items: center;">
+                    <button class="btn btn-icon" id="btn-add-import-row" style="font-size: 12px; width: auto; padding: 6px 12px;">+ Add 10 Rows</button>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn" id="btn-cancel-import">Cancel</button>
+                        <button class="btn btn-purple" id="btn-confirm-import">Import Data</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="side-panel" id="side-panel">
+                <div class="panel-header">
+                    <div class="panel-title" id="panel-title">New Entry</div>
+                    <button class="btn-close" id="btn-close-panel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                </div>
+                <div class="panel-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="form-date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Agent Name</label>
+                            <select id="form-agent" class="form-control"><option value="" disabled selected>Select agent...</option></select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Related To</label>
+                        <select id="form-related" class="form-control"><option value="" disabled selected>Select related to...</option></select>
+                    </div>
+                    
+                    <div class="form-group" id="group-type" style="display:none;">
+                        <label>Type of Interaction</label>
+                        <select id="form-type" class="form-control"></select>
+                    </div>
+
+                    <div class="form-group" id="group-sentiment" style="display:none;">
+                        <label>Sentiment</label>
+                        <div class="status-selector">
+                            <button class="status-btn sentiment-btn" data-value="Positive">Positive</button>
+                            <button class="status-btn sentiment-btn" data-value="Negative">Negative</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Action Taken</label>
+                        <div class="custom-select-wrapper">
+                            <input type="text" id="form-action" class="form-control" placeholder="Search or select action..." autocomplete="off">
+                            <ul class="autocomplete-list" id="autocomplete-action"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Request Type</label>
+                        <div class="custom-select-wrapper">
+                            <input type="text" id="form-req" class="form-control" placeholder="Search or select request type..." autocomplete="off">
+                            <ul class="autocomplete-list" id="autocomplete-req"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status</label>
+                        <div class="status-selector" id="form-status">
+                            </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Documentation Links</label>
+                        <div class="link-row" id="link-fc-row">
+                            <label>Freshchat</label>
+                            <input type="text" id="form-link-fc" class="form-control" placeholder="Paste link…">
+                        </div>
+                        <div class="link-row">
+                            <label>Post / Thread</label>
+                            <input type="text" id="form-link-post" class="form-control" placeholder="Paste link or text…">
+                        </div>
+                        <div class="link-row">
+                            <label>Reference link</label>
+                            <input type="text" id="form-link-ref" class="form-control" placeholder="Paste link…">
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <button class="btn" id="btn-cancel">Cancel</button>
+                    <button class="btn btn-purple" id="btn-save">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Save entry
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Supabase Imports and Module Logic -->
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+        const supabaseUrl = 'https://zyxogrxhwxwebccfuxzs.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5eG9ncnhod3h3ZWJjY2Z1eHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3ODczNTEsImV4cCI6MjA5NDM2MzM1MX0.1Z0BJgdk-Oc9Hy0kNlkNKb_PHiPKw8AnHx3l7urCjIE';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // --- DATA STATE ---
+        const state = {
+            agents: ["Lina Hashem", "Job James", "Ariath Piol"],
+            relatedTo: ["Community Management", "Support General Inquiry", "Order Support Related", "Product Support Related"],
+            actions: ["Motivated Member", "Provided support from FAQ", "Provided Support from Slack Channel", "Directed Member to contact Support", "Directed Customer to DM", "Feedback/Sugg Raised on Slack", "Provided from Kustomer Canned Response", "Provided Support from SOP/Retool/shopify/App"],
+            requestTypes: ["3PL Communications", "Accessories Cancellation", "Accessories Damaged", "Accessories Delayed", "Accessories discount promotion", "Accessories Emergent", "Accessories ETA", "Accessories Inquiry", "Accessories MFG Issue", "Accessories Missing", "Accessories Refund", "Accessories Replacement", "Accessories Return", "Accessory Tech Issue", "Account remove", "Add-On ETA", "Address Change", "Affirm Inquiry", "Apparel Store Discount", "Bestbuy", "Buy Items", "Buyout", "Churn Program", "Classes Inquiry", "Cleaning Instructions", "Coach Intro Call", "Color change", "Compensation Request", "Contact info Change", "Creating Order", "Damaged Studio", "Delayed Bundle Accessories", "Delayed Bundle Accessories cancelation", "Delayed Bundle Accessories compensation", "Delayed Bundle Accessories ETA", "Delayed Bundle Accessories Inquiry", "Discount Code", "Downgrade membership", "Edit Order", "Email Address Update", "Escalation", "Exception Request", "Expedite Shipping", "Family Invite", "Family Member Profile Deletion", "FedEx Call", "Feedback", "Finance Dept.", "Fitness Coaching", "Flowspace OB", "Free core inquiry", "Free Shirt Inquiry", "Friendbuy Advocate", "Friendbuy Reward", "General Inquiry", "Gift Code", "GiftBox Promotion", "Giveaway Order", "Gympass", "Holding Delivery", "HOLIDAY100 price match", "HOLIDAY1000 price match", "International delivery", "Leasing Cancelation", "logistics raise", "Marketing Emails Issue", "Membership Activation", "Membership cancelation", "Membership CC update", "Membership Charge Date Change", "Membership Creation", "Membership Discount", "Membership Email Change", "Membership Free Months", "Membership Inquiry", "Membership Invoice", "Membership Pause", "Membership Refund", "Membership Single Login", "Membership Upgrade", "Membership Prepaid bundle purchase", "Mobile App", "Move Boxes", "Move Cancellation", "Move Color Change", "Move Delivery Issue", "Move Discount", "Move ETA", "Move Gift", "Move Part Replacement", "Move Received Damaged", "Move Refund", "Move Replacement", "Move Return", "Move Tech Issue", "My Plan Inquiry", "NPS", "Order Info", "Ownership Transfer", "Partnership", "Payment Method", "Product Specs", "Promotions", "Receipt Request", "Referral Program", "Refund", "Refurbished", "Replacement ETA", "Reset Password", "SBS", "Sending Invoice", "Shipping", "Social Team", "Stuck Plates", "Studio Cancellation", "Studio Delivery issue (Elite)", "Studio Delivery issue (XPO-RXO)", "Studio Delivery issue (Ryder)", "Studio Downgrade/Upgrade", "Studio ETA", "Studio Refund", "Studio Return", "Studio Swap ETA", "Studio Tech issue", "Survey Email", "Tempo One Inquiry", "Website Error", "WGS Issue", "Workout Recommendation", "Apple watch connectivity issue", "Reschedule delivery", "Compatibility", "Form feedback", "Rep counting", "Live classes", "Rental", "App support", "Add/Remove Profile", "Trot Challenge", "Change Billing Info", "Music Stations Inquiry", "Prospective", "Unresponsive", "Fitmas Challenge", "Add equipment", "Garage/outdoor", "Incomplete class", "Membership Reactivation", "Safety Guide", "Delivery ETA", "Current discounts", "Core purchase request", "Shoutout request", "Buy/sell tempo", "Accessories waitlist", "Suggestion", "Strava", "New Year's Challenge", "Delayed order", "GPU Fluttering", "Apparel store exchange", "Tempo Updates", "Heart HIITERs Challenge", "Spring challenge", "Encore Classes", "Feature request", "Cloud trainer feature", "Military Discount", "Outdoor studio storage", "Beta Testing", "Range of motion", "5k running Challenge", "Apparel inquiry", "Can't Locate a Program", "Bench address technical issue", "Chat with your coach", "Connection Issues", "Network Issues Buffering", "Can't Locate a Class", "Airpods Connectivity", "Live Classes Issues", "Weight Recommendation", "Unit pickup", "Advertisements", "Folding Bench Inquiry", "Weekly Strength Set Goals", "HRM inquiry", "Squat Rack Setup", "Weight Detection", "Apple Health Sync", "Stream Classes using the App", "Injury advice", "Audio cue", "Accessories order", "Network Issues", "Classes filtration", "Tempo Athletes Inquiry", "Squat Rack Issues", "Apple Watch Connectivity", "Macbook Compatibility", "Group community-related", "Untracked exercises", "Audio Cues feature", "Workout Mat Washable", "HDMI cable", "Studio Delivery Issue", "Workout Preferences", "Paused Classes/Feedback", "Freezing Update", "Mobile App Issue", "Programs Inquiry", "Tempo Move Connectivity", "Accessories Issue", "Tempo new experience", "Music issue", "Fitness Inquiry", "HRM Issues", "Summer challenge", "Workout History", "Reps Info", "WIFI External Adaptor", "Adjusting Weight Manually", "Streaks Inquiry", "Airplay Screen Mirroring", "Moving Tempo Studio", "Leaderboard Ranking Issues", "Weight entry issue", "Android complaint", "Join multiple program", "Strava integration with Tempo app", "Fitbit integration", "Challenges feedback", "Completed program Tab", "Reformer Pilates", "Adding classes to favorites", "Apple Watch complication", "Upgrade bundles of equipment", "Personalized Workout Creator Feature Request", "Tempo Trainer", "Calendar issue", "Live class notification issue", "Training plan inquiry", "Weight Calibration Classes", "Progress Hub", "Live Guided Programs", "Schedule classes", "Equipment inquiry", "Bluetooth Inquiry", "Dynamic rest", "Studio inquiry", "Website quiz", "Training plan issue", "Classes tab Redesign", "Mirror mode", "Email issue", "Body scan Comparison feature", "Downloadable workout", "Summer Sculpt Challenge", "Calendar selection", "Remove Profiles", "Leaderboard Ranking inquiry", "Tempo challenges", "Challenge Badges", "Tempo Move inquiry", "Android Body Scan", "Challenge pins", "Mirror mode Studio", "Mirror mode Move", "Leaderboard Groups", "Core Bundle Inquiry", "Challenge Completion email", "Reps in Reverse", "Reps overcounting", "Unsupported old apple watches", "End of Summer challenge", "Fit For Fall Challenge", "Welcome Kit", "Unable to log in", "Community feature", "Readiness score", "FSA/HSA", "Numbers discrepancy", "Flex program issue", "iPhone 16e incompatible", "Tempo ambassador program", "Post approval", "Studio availability", "Android compatibility/support", "Workout records issue", "Core replacement", "Renewed Tempo Move", "2025 Year Recap", "Extended dumbbells", "Body scan issue", "Delayed/lost pin", "Postage due", "Move color swap", "Lightening core availability", "Challenge end date", "iPhone 15 core inquiry"],
+            statuses: ["Closed", "Pending internal action", "Pending member action"],
+            interactionTypes: ["DM", "Page comments", "Group comments", "Instagram Comments", "Instagram DM"],
+            cases: { fbig: [], reddit: [], review: [] },
+            
+            activePanelType: 'fbig',
+            newEntryStatus: 'Closed',
+            newEntrySentiment: 'Positive',
+            editingId: null,
+            editingKey: null,
+            importTarget: null,
+            
+            advFilters: {
+                startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [], sentiments: []
+            },
+            
+            viewState: {
+                weeklyEndMonday: null,
+                monthlyDate: null
+            },
+            
+            pagination: {
+                fbig: { page: 1, limit: 50 },
+                reddit: { page: 1, limit: 50 },
+                review: { page: 1, limit: 50 },
+                pending: { page: 1, limit: 50 }
+            }
+        };
+
+        const svgExt = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;margin-left:2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
+        const svgEdit = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+        const svgDel = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+        const svgUp = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+        const svgDown = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+
+        let charts = {};
+
+        // Configuration for mapping specific actions to SOP in Data Analysis
+        const actionRemapList = ["provided from retool", "provided from tempo app", "provided from shopify", "provided from coda"];
+        const actionTargetName = "Provided Support From SOP";
+
+        const reportActionKeys = [
+            "Motivated Member",
+            "Provided Support From slack Channel",
+            "Provided Support From SOP",
+            "Provided Support From FAQ",
+            "Directed Customer To DM",
+            "Feedback raised on Slack"
+        ];
+
+        function mapReportAction(rawAction) {
+            if (!rawAction) return "OTHER";
+            const lower = rawAction.toLowerCase();
+            if (actionRemapList.includes(lower) || lower.includes("sop") || lower.includes("retool") || lower.includes("shopify") || lower.includes("coda") || lower.includes("tempo app") || lower.includes("kustomer")) return "Provided Support From SOP";
+            if (lower.includes("faq")) return "Provided Support From FAQ";
+            if (lower.includes("slack") && lower.includes("provided")) return "Provided Support From slack Channel";
+            if (lower.includes("slack") && (lower.includes("feedback") || lower.includes("sugg"))) return "Feedback raised on Slack";
+            if (lower.includes("dm") && (lower.includes("directed") || lower.includes("customer"))) return "Directed Customer To DM";
+            if (lower.includes("motivated")) return "Motivated Member";
+            return "OTHER";
+        }
+
+        // --- RELATIONAL SUPABASE SYNC UTILS ---
+        window.saveSettingsToSupabase = async function() {
+            const settingsData = {
+                id: 'main',
+                agents: state.agents,
+                related_to: state.relatedTo,
+                actions: state.actions,
+                request_types: state.requestTypes,
+                statuses: state.statuses,
+                interaction_types: state.interactionTypes
+            };
+            try {
+                const { error } = await supabase.from('settings').upsert(settingsData);
+                if (error) throw error;
+            } catch (e) {
+                console.error("Error saving settings to Supabase:", e);
+            }
+        };
+
+        // --- INIT & UTILS ---
+        function init() {
+            const today = new Date();
+            state.viewState.weeklyEndMonday = getMonday(today.toISOString().split('T')[0]);
+            state.viewState.monthlyDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+
+            setupAutocomplete('form-action', 'autocomplete-action', 'actions');
+            setupAutocomplete('form-req', 'autocomplete-req', 'requestTypes');
+
+            populateDropdowns();
+            populateAdvFilters();
+            renderAllTables();
+            
+            setupDateControlListeners();
+            document.querySelectorAll('.btn-export').forEach(btn => btn.addEventListener('click', handleExport));
+
+            // Pagination Listeners
+            document.querySelectorAll('.btn-prev-page').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabKey = btn.closest('.page-view').id.replace('page-', '');
+                    if (state.pagination[tabKey] && state.pagination[tabKey].page > 1) {
+                        state.pagination[tabKey].page--;
+                        renderAllTables();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-next-page').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabKey = btn.closest('.page-view').id.replace('page-', '');
+                    if (state.pagination[tabKey]) {
+                        state.pagination[tabKey].page++;
+                        renderAllTables();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.rows-per-page').forEach(sel => {
+                sel.addEventListener('change', (e) => {
+                    const tabKey = sel.closest('.page-view').id.replace('page-', '');
+                    if (state.pagination[tabKey]) {
+                        state.pagination[tabKey].limit = parseInt(e.target.value);
+                        state.pagination[tabKey].page = 1;
+                        renderAllTables();
+                    }
+                });
+            });
+
+            const currentYear = new Date().getFullYear();
+            const yearSelect = document.getElementById('import-year');
+            if (yearSelect) {
+                for(let y = currentYear - 2; y <= currentYear + 2; y++) {
+                    yearSelect.innerHTML += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+                }
+            }
+
+            document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+            
+            // LOCALSTORAGE NAVIGATION LOGIC
+            const lastPageId = localStorage.getItem('sm_tracker_last_page') || 'page-fbig';
+            const targetNav = document.querySelector(`[data-target="${lastPageId}"]`);
+            if (targetNav) {
+                if(targetNav.classList.contains('nav-sub-item')) {
+                    const parent = document.getElementById('nav-data-analysis');
+                    if(parent) parent.setAttribute('data-expanded', 'true');
+                }
+                targetNav.click();
+            } else {
+                document.querySelector('[data-target="page-fbig"]').click();
+            }
+            
+            document.getElementById('search-edit-req').addEventListener('input', (e) => {
+                renderEditList('list-req', state.requestTypes, 'requestTypes', e.target.value);
+            });
+            
+            // LOCALSTORAGE THEME LOGIC
+            const savedTheme = localStorage.getItem('sm_tracker_theme') || 'light';
+            document.getElementById('setting-theme').value = savedTheme;
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                Chart.defaults.color = '#8B949E';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                Chart.defaults.color = '#888888';
+            }
+            
+            document.getElementById('setting-theme').addEventListener('change', (e) => {
+                const theme = e.target.value;
+                localStorage.setItem('sm_tracker_theme', theme);
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    Chart.defaults.color = '#8B949E';
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    Chart.defaults.color = '#888888';
+                }
+                ['wk1', 'wk2', 'wk3', 'wk4', 'mo1', 'mo-chart-rel', 'mo-chart-act', 'mo-chart-review'].forEach(id => {
+                    if (charts[id]) charts[id].update();
+                });
+            });
+            
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('.multi-select-wrapper')) {
+                    document.querySelectorAll('.ms-dropdown').forEach(d => d.classList.remove('active'));
+                }
+            });
+
+            // Helper to clean duplicate arrays on load (case insensitive)
+            const dedupe = (arr) => {
+                const seen = new Set();
+                const cleaned = [];
+                arr.forEach(item => {
+                    if (!item) return;
+                    const trimmed = item.trim();
+                    const lower = trimmed.toLowerCase();
+                    if (!seen.has(lower)) {
+                        seen.add(lower);
+                        cleaned.push(trimmed);
+                    }
+                });
+                return cleaned;
+            };
+
+            // Initialize Relational Data from Supabase
+            const loadSupabaseData = async () => {
+                try {
+                    // Fetch settings first
+                    const settingsPromise = supabase.from('settings').select('*').eq('id', 'main').single();
+                    
+                    // Fetch ALL cases with pagination to overcome the default 1000-row limit
+                    const fetchAllCases = async () => {
+                        let allCases = [];
+                        let page = 0;
+                        const pageSize = 1000;
+                        
+                        while (true) {
+                            const { data, error } = await supabase
+                                .from('cases')
+                                .select('*')
+                                .range(page * pageSize, (page + 1) * pageSize - 1);
+                                
+                            if (error) throw error;
+                            if (data) allCases = allCases.concat(data);
+                            if (!data || data.length < pageSize) break;
+                            
+                            page++;
+                        }
+                        return allCases;
+                    };
+
+                    const [settingsRes, allCasesData] = await Promise.all([
+                        settingsPromise,
+                        fetchAllCases().catch(err => { console.error("Cases fetch error:", err.message); return null; })
+                    ]);
+
+                    if (settingsRes.error && settingsRes.error.code !== 'PGRST116') {
+                        console.warn("Settings fetch warning:", settingsRes.error.message);
+                    }
+                    if (settingsRes.data) {
+                        const dbData = settingsRes.data;
+                        state.agents = dedupe(dbData.agents || state.agents);
+                        state.relatedTo = dedupe(dbData.related_to || state.relatedTo);
+                        state.actions = dedupe(dbData.actions || state.actions);
+                        state.requestTypes = dedupe(dbData.request_types || state.requestTypes);
+                        state.statuses = dedupe(dbData.statuses || state.statuses);
+                        state.interactionTypes = dedupe(dbData.interaction_types || state.interactionTypes);
+                        
+                        window.saveSettingsToSupabase();
+                    } else {
+                        window.saveSettingsToSupabase();
+                    }
+                    
+                    if (allCasesData) {
+                        state.cases = { fbig: [], reddit: [], review: [] };
+                        allCasesData.forEach(c => {
+                            const mappedCase = {
+                                id: c.id,
+                                date: c.date,
+                                agent: c.agent,
+                                related: c.related,
+                                type: c.type,
+                                sentiment: c.sentiment,
+                                action: c.action,
+                                req: c.req,
+                                status: c.status,
+                                qa: c.qa || false,
+                                links: {
+                                    fc: c.link_fc,
+                                    post: c.link_post,
+                                    ref: c.link_ref
+                                }
+                            };
+                            if (c.source && state.cases[c.source]) {
+                                state.cases[c.source].push(mappedCase);
+                            }
+                        });
+                    }
+                    
+                    populateDropdowns();
+                    populateAdvFilters();
+                    renderAllTables();
+                    
+                    if (document.getElementById('page-weekly').classList.contains('active')) renderWeeklyReview();
+                    if (document.getElementById('page-monthly').classList.contains('active')) renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+                } catch (err) {
+                    console.error("Critical connection error:", err);
+                }
+            };
+            loadSupabaseData();
+        }
+
+        function setupAutocomplete(inputId, listId, dataArrayKey) {
+            const inp = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            
+            function renderList(filterText = '') {
+                list.innerHTML = '';
+                const arr = state[dataArrayKey];
+                const filtered = filterText ? arr.filter(i => i.toLowerCase().includes(filterText.toLowerCase())) : arr;
+                
+                if (filtered.length === 0) {
+                    list.innerHTML = `<li class="autocomplete-item" style="color:var(--text-muted); cursor:default;">No matches found</li>`;
+                    return;
+                }
+
+                filtered.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'autocomplete-item';
+                    li.textContent = item;
+                    li.addEventListener('mousedown', (e) => {
+                        e.preventDefault(); 
+                        inp.value = item;
+                        inp.classList.remove('error');
+                        list.classList.remove('active');
+                    });
+                    list.appendChild(li);
+                });
+            }
+
+            inp.addEventListener('focus', () => {
+                renderList(inp.value);
+                list.classList.add('active');
+            });
+
+            inp.addEventListener('input', (e) => {
+                inp.classList.remove('error');
+                renderList(e.target.value);
+                list.classList.add('active');
+            });
+
+            inp.addEventListener('blur', () => {
+                setTimeout(() => {
+                    list.classList.remove('active');
+                }, 150);
+            });
+        }
+
+        function populateDropdowns() {
+            const fillSelect = (id, arr) => {
+                const el = document.getElementById(id);
+                if(!el) return;
+                el.innerHTML = '<option value="" disabled selected>Select...</option>';
+                arr.forEach(i => el.innerHTML += `<option value="${i}">${i}</option>`);
+            };
+
+            fillSelect('form-agent', state.agents);
+            fillSelect('form-related', state.relatedTo);
+            
+            renderStatuses();
+            renderEditLists();
+        }
+
+        function renderStatuses() {
+            const formStatus = document.getElementById('form-status');
+            if(!formStatus) return;
+            formStatus.innerHTML = state.statuses.map(s => `<button class="status-btn" data-value="${s}">${s}</button>`).join('');
+            
+            if(!state.statuses.includes(state.newEntryStatus)) state.newEntryStatus = state.statuses[0] || '';
+            const defaultBtn = formStatus.querySelector(`.status-btn[data-value="${state.newEntryStatus}"]`);
+            if(defaultBtn) defaultBtn.classList.add('selected');
+            
+            formStatus.querySelectorAll('.status-btn').forEach(b => {
+                b.addEventListener('click', (e) => {
+                    formStatus.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    state.newEntryStatus = e.target.getAttribute('data-value');
+                });
+            });
+        }
+
+        function populateAdvFilters() {
+            const createCb = (val, key) => `<label class="checkbox-item"><input type="checkbox" value="${val}" data-key="${key}"> ${val}</label>`;
+            
+            document.getElementById('adv-agents').innerHTML = state.agents.map(v => createCb(v, 'agents')).join('');
+            document.getElementById('adv-related').innerHTML = state.relatedTo.map(v => createCb(v, 'relatedTo')).join('');
+            document.getElementById('adv-actions').innerHTML = state.actions.map(v => createCb(v, 'actions')).join('');
+            document.getElementById('adv-statuses').innerHTML = state.statuses.map(v => createCb(v, 'statuses')).join('');
+            document.getElementById('adv-sentiments').innerHTML = ['Positive', 'Negative'].map(v => createCb(v, 'sentiments')).join('');
+            
+            const renderAdvReqs = (filterTxt = '') => {
+                const arr = filterTxt ? state.requestTypes.filter(r => r.toLowerCase().includes(filterTxt.toLowerCase())) : state.requestTypes;
+                document.getElementById('adv-reqs').innerHTML = arr.map(v => createCb(v, 'requestTypes')).join('');
+                document.querySelectorAll('#adv-reqs input').forEach(inp => {
+                    if (state.advFilters.requestTypes.includes(inp.value)) inp.checked = true;
+                });
+            };
+            
+            renderAdvReqs();
+            
+            ['agents', 'relatedTo', 'actions', 'statuses', 'sentiments'].forEach(key => {
+                document.querySelectorAll(`#adv-${key} input`).forEach(inp => {
+                    if (state.advFilters[key].includes(inp.value)) inp.checked = true;
+                });
+            });
+
+            document.querySelectorAll('.multi-select-wrapper').forEach(wrapper => {
+                const header = wrapper.querySelector('.ms-header');
+                const dropdown = wrapper.querySelector('.ms-dropdown');
+                const search = wrapper.querySelector('.ms-search');
+                const list = wrapper.querySelector('.checkbox-list');
+
+                header.onclick = (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.ms-dropdown').forEach(d => { if(d !== dropdown) d.classList.remove('active'); });
+                    dropdown.classList.toggle('active');
+                };
+
+                dropdown.onclick = (e) => e.stopPropagation();
+
+                if (search) {
+                    search.oninput = (e) => {
+                        const val = e.target.value.toLowerCase();
+                        if(list.id === 'adv-reqs') {
+                            renderAdvReqs(val);
+                        } else {
+                            list.querySelectorAll('.checkbox-item').forEach(item => {
+                                const text = item.textContent.toLowerCase();
+                                item.style.display = text.includes(val) ? 'flex' : 'none';
+                            });
+                        }
+                    };
+                }
+
+                list.onchange = () => {
+                    const checked = list.querySelectorAll('input:checked').length;
+                    header.textContent = checked > 0 ? `${checked} selected` : header.getAttribute('data-placeholder');
+                };
+
+                const checkedInit = list.querySelectorAll('input:checked').length;
+                header.textContent = checkedInit > 0 ? `${checkedInit} selected` : header.getAttribute('data-placeholder');
+            });
+        }
+
+        function getStatusClass(status) {
+            if (status === 'Closed') return 'badge-closed';
+            if (status === 'Pending internal action') return 'badge-pending-internal';
+            if (status === 'Pending member action') return 'badge-pending-member';
+            return 'badge-default';
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        function getMonday(dStr) {
+            const d = new Date(dStr + 'T12:00:00');
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(d.setDate(diff)).toISOString().split('T')[0];
+        }
+
+        function addDays(dStr, days) {
+            const d = new Date(dStr + 'T12:00:00');
+            d.setDate(d.getDate() + days);
+            return d.toISOString().split('T')[0];
+        }
+
+        function applyAdvFilters(c) {
+            const af = state.advFilters;
+            if(af.startDate && c.date < af.startDate) return false;
+            if(af.endDate && c.date > af.endDate) return false;
+            if(af.agents.length > 0 && !af.agents.includes(c.agent)) return false;
+            if(af.actions.length > 0 && !af.actions.includes(c.action)) return false;
+            if(af.statuses.length > 0 && !af.statuses.includes(c.status)) return false;
+            if(af.relatedTo.length > 0 && c.related && !af.relatedTo.includes(c.related)) return false;
+            
+            const activePage = document.querySelector('.page-view.active').id;
+            if (activePage === 'page-review') {
+                if(af.sentiments && af.sentiments.length > 0 && (!c.sentiment || !af.sentiments.includes(c.sentiment))) return false;
+            } else {
+                if(af.requestTypes.length > 0 && !af.requestTypes.includes(c.req)) return false;
+            }
+
+            return true;
+        }
+
+        // --- NAVIGATION ---
+        document.querySelectorAll('.nav-link').forEach(nav => {
+            nav.addEventListener('click', (e) => {
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                const target = e.currentTarget;
+                target.classList.add('active');
+                
+                if(target.classList.contains('nav-sub-item')) {
+                    document.getElementById('nav-data-analysis').classList.add('active');
+                }
+
+                document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+                const pageId = target.getAttribute('data-target');
+                document.getElementById(pageId).classList.add('active');
+
+                // Save page persistent navigation
+                localStorage.setItem('sm_tracker_last_page', pageId);
+                
+                // Reset pagination on tab switch
+                const tabKey = pageId.replace('page-', '');
+                if (state.pagination[tabKey]) state.pagination[tabKey].page = 1;
+
+                if (pageId === 'page-weekly') renderWeeklyReview();
+                if (pageId === 'page-monthly') renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+                
+                renderAllTables();
+            });
+        });
+
+        document.getElementById('nav-data-analysis').addEventListener('click', (e) => {
+            const el = e.currentTarget;
+            const expanded = el.getAttribute('data-expanded') === 'true';
+            el.setAttribute('data-expanded', !expanded);
+        });
+
+        // --- EDIT AND DELETE FUNCTIONS ---
+        let pendingDelete = null;
+
+        window.deleteCase = async function(dataKey, id) {
+            pendingDelete = { dataKey, id };
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('delete-modal').classList.add('active');
+        };
+
+        document.getElementById('btn-cancel-del').addEventListener('click', () => {
+            pendingDelete = null;
+            document.getElementById('delete-modal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        });
+
+        document.getElementById('btn-confirm-del').addEventListener('click', async () => {
+            if(pendingDelete) {
+                try {
+                    const { error } = await supabase.from('cases').delete().eq('id', pendingDelete.id.toString());
+                    if (error) throw error;
+                    
+                    // Update local state ONLY IF SUCCESS
+                    state.cases[pendingDelete.dataKey] = state.cases[pendingDelete.dataKey].filter(c => c.id != pendingDelete.id);
+                    renderAllTables();
+                } catch (e) {
+                    console.error("Delete error:", e);
+                }
+            }
+            pendingDelete = null;
+            document.getElementById('delete-modal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        });
+
+        window.editCase = function(dataKey, id) {
+            const caseData = state.cases[dataKey].find(c => c.id == id);
+            if(!caseData) return;
+            
+            state.editingId = caseData.id;
+            state.editingKey = dataKey;
+            
+            openEntryPanel(dataKey, true);
+            
+            document.getElementById('form-date').value = caseData.date;
+            document.getElementById('form-agent').value = caseData.agent;
+            if(caseData.related) document.getElementById('form-related').value = caseData.related;
+            if(caseData.action) document.getElementById('form-action').value = caseData.action;
+            if(caseData.req) document.getElementById('form-req').value = caseData.req;
+            
+            if(dataKey === 'fbig' && caseData.type) document.getElementById('form-type').value = caseData.type;
+            if(dataKey === 'review') {
+                if(caseData.type) document.getElementById('form-type').value = caseData.type;
+                document.querySelectorAll('.sentiment-btn').forEach(b => {
+                    b.classList.remove('selected');
+                    if(b.getAttribute('data-value') === caseData.sentiment) b.classList.add('selected');
+                });
+                state.newEntrySentiment = caseData.sentiment;
+            }
+            
+            document.querySelectorAll('#form-status .status-btn').forEach(b => {
+                b.classList.remove('selected');
+                if(b.getAttribute('data-value') === caseData.status) b.classList.add('selected');
+            });
+            state.newEntryStatus = caseData.status;
+            
+            document.getElementById('form-link-fc').value = caseData.links.fc || '';
+            document.getElementById('form-link-post').value = caseData.links.post || '';
+            document.getElementById('form-link-ref').value = caseData.links.ref || '';
+        };
+
+        // --- TABLE RENDERING & FILTERING (DRY IMPLEMENTATION) ---
+
+        function updatePaginationUI(container, totalItems, dataKey) {
+            const pState = state.pagination[dataKey] || { page: 1, limit: 50 };
+            const totalPages = Math.ceil(totalItems / pState.limit) || 1;
+            
+            if (pState.page > totalPages) pState.page = totalPages;
+            if (pState.page < 1) pState.page = 1;
+            
+            const btnPrev = container.querySelector('.btn-prev-page');
+            const btnNext = container.querySelector('.btn-next-page');
+            const pageText = container.querySelector('.page-info');
+            
+            if(btnPrev) btnPrev.disabled = pState.page <= 1;
+            if(btnNext) btnNext.disabled = pState.page >= totalPages;
+            if(pageText) pageText.textContent = `Page ${pState.page} of ${totalPages}`;
+            
+            return {
+                start: (pState.page - 1) * pState.limit,
+                end: pState.page * pState.limit
+            };
+        }
+
+        function getFilteredCases(dataKey, isPendingView = false) {
+            const pageId = isPendingView ? 'page-pending' : 'page-' + dataKey;
+            const container = document.getElementById(pageId);
+            if (!container) return [];
+            
+            const searchInput = container.querySelector('.search-input');
+            const search = searchInput ? searchInput.value.toLowerCase() : '';
+            const activeChip = container.querySelector('.chip.active') ? container.querySelector('.chip.active').getAttribute('data-filter') : 'All';
+            
+            let casesToFilter = [];
+            if (isPendingView) {
+                casesToFilter = [
+                    ...state.cases.fbig.map(c => ({...c, _source: 'fbig', _sourceName: 'FB/IG'})),
+                    ...state.cases.reddit.map(c => ({...c, _source: 'reddit', _sourceName: 'Reddit'})),
+                    ...state.cases.review.map(c => ({...c, _source: 'review', _sourceName: 'Review'}))
+                ];
+            } else {
+                casesToFilter = state.cases[dataKey].map(c => ({...c, _source: dataKey}));
+            }
+
+            let filtered = casesToFilter.filter(c => {
+                let matchesSearch = c.agent.toLowerCase().includes(search) || 
+                                    (c.type && c.type.toLowerCase().includes(search)) ||
+                                    (c.req && c.req.toLowerCase().includes(search)) ||
+                                    (c._source === 'review' && c.links && c.links.post && c.links.post.toLowerCase().includes(search));
+                
+                if (isPendingView) {
+                    if (!c.status.toLowerCase().includes('pending')) return false;
+                } else {
+                    if (activeChip !== 'All') {
+                        if (dataKey === 'fbig' || dataKey === 'review') {
+                            if (c.type !== activeChip && c.sentiment !== activeChip) return false;
+                        } else if (dataKey === 'reddit') {
+                            if (c.related !== activeChip) return false;
+                        }
+                    }
+                }
+                return matchesSearch && applyAdvFilters(c);
+            });
+
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            return filtered;
+        }
+
+        function generateTableRowHtml(c, isPendingView) {
+            const dataKey = c._source;
+            let linksHtml = '';
+            if(c.links.fc) linksHtml += `<a href="${c.links.fc}" target="_blank">FC${svgExt}</a>`;
+            if(dataKey !== 'review' && c.links.post) linksHtml += `<a href="${c.links.post}" target="_blank">Post${svgExt}</a>`;
+            if(c.links.ref) linksHtml += `<a href="${c.links.ref}" target="_blank">Ref${svgExt}</a>`;
+
+            let colsHtml = `<td class="col-date">${formatDate(c.date)}</td>`;
+            if (isPendingView) colsHtml += `<td><span class="badge badge-default">${c._sourceName}</span></td>`;
+            colsHtml += `<td class="col-name">${c.agent}</td>`;
+            
+            if (isPendingView) {
+                colsHtml += `<td>${c.related || '-'}</td>
+                             <td><span class="badge badge-type">${c.type || '-'}</span></td>
+                             <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                             <td>${c.action || '-'}</td>`;
+            } else {
+                if (dataKey === 'fbig') {
+                    colsHtml += `<td>${c.related || '-'}</td>
+                                 <td><span class="badge badge-type">${c.type || '-'}</span></td>
+                                 <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                                 <td>${c.action || '-'}</td>`;
+                } else if (dataKey === 'reddit') {
+                    colsHtml += `<td>${c.related || '-'}</td>
+                                 <td><span class="badge badge-req">${c.req || '-'}</span></td>
+                                 <td>${c.action || '-'}</td>`;
+                } else if (dataKey === 'review') {
+                    const sentClass = c.sentiment === 'Positive' ? 'badge-positive' : 'badge-negative';
+                    colsHtml += `<td>${c.related || '-'}</td>
+                                 <td><span class="badge badge-type">${c.type || '-'}</span></td>
+                                 <td><span class="badge ${sentClass}">${c.sentiment || '-'}</span></td>
+                                 <td>${c.action || '-'}</td>
+                                 <td>${c.links.post || '-'}</td>`;
+                }
+            }
+
+            colsHtml += `<td><span class="badge ${getStatusClass(c.status)}">${c.status}</span></td>
+                         <td class="links-col">${linksHtml}</td>
+                         <td style="text-align:center;">
+                            <input type="checkbox" onchange="window.toggleQA('${dataKey}', '${c.id}', this.checked)" ${c.qa ? 'checked' : ''} style="cursor:pointer;" title="QA Audited">
+                         </td>
+                         <td style="text-align:right;">
+                            <button class="btn-icon" onclick="editCase('${dataKey}', '${c.id}')">${svgEdit}</button>
+                            <button class="btn-icon" onclick="deleteCase('${dataKey}', '${c.id}')">${svgDel}</button>
+                         </td>`;
+            return `<tr>${colsHtml}</tr>`;
+        }
+
+        window.toggleQA = async function(dataKey, id, isChecked) {
+            const caseIdx = state.cases[dataKey].findIndex(c => c.id == id);
+            if (caseIdx > -1) {
+                state.cases[dataKey][caseIdx].qa = isChecked;
+            }
+            try {
+                const { error } = await supabase.from('cases').update({ qa: isChecked }).eq('id', id);
+                if (error) throw error;
+            } catch (e) {
+                console.error("QA update error:", e);
+                if (caseIdx > -1) state.cases[dataKey][caseIdx].qa = !isChecked; // Revert if failed
+                renderAllTables();
+                alert("Failed to update QA status. Make sure the 'qa' column exists in Supabase as a boolean!");
+            }
+        };
+
+        function renderTable(pageId, dataKey) {
+            const container = document.getElementById(pageId);
+            if (!container) return;
+            const tbody = container.querySelector('.table-body');
+            if (!tbody) return;
+            
+            const filtered = getFilteredCases(dataKey, false);
+
+            const entryCountEl = container.querySelector('.entry-count');
+            if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
+            
+            const pi = filtered.filter(c => c.status === 'Pending internal action').length;
+            const pm = filtered.filter(c => c.status === 'Pending member action').length;
+            const statusCountsEl = container.querySelector('.status-counts');
+            if (statusCountsEl) statusCountsEl.textContent = `· ${pi} pending internal · ${pm} pending member`;
+
+            const { start, end } = updatePaginationUI(container, filtered.length, dataKey);
+            const paginated = filtered.slice(start, end);
+
+            tbody.innerHTML = paginated.map(c => generateTableRowHtml(c, false)).join('');
+        }
+
+        function renderPendingTable() {
+            const container = document.getElementById('page-pending');
+            if (!container) return;
+            const tbody = container.querySelector('.table-body');
+            if (!tbody) return;
+            
+            const filtered = getFilteredCases('pending', true);
+
+            const entryCountEl = container.querySelector('.entry-count');
+            if (entryCountEl) entryCountEl.textContent = `· ${filtered.length} entries`;
+            const statusCountsEl = container.querySelector('.status-counts');
+            if (statusCountsEl) statusCountsEl.textContent = `· ${filtered.length} pending entries combined`;
+            
+            const { start, end } = updatePaginationUI(container, filtered.length, 'pending');
+            const paginated = filtered.slice(start, end);
+
+            tbody.innerHTML = paginated.map(c => generateTableRowHtml(c, true)).join('');
+        }
+
+        function renderAllTables() {
+            renderTable('page-fbig', 'fbig');
+            renderTable('page-reddit', 'reddit');
+            renderTable('page-review', 'review');
+            renderPendingTable();
+        }
+
+        document.querySelectorAll('.search-input').forEach(inp => inp.addEventListener('input', () => {
+            const tabKey = inp.closest('.page-view').id.replace('page-', '');
+            if (state.pagination[tabKey]) state.pagination[tabKey].page = 1;
+            renderAllTables();
+        }));
+        
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                const container = e.currentTarget.closest('.filter-bar');
+                container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                
+                const tabKey = chip.closest('.page-view').id.replace('page-', '');
+                if (state.pagination[tabKey]) state.pagination[tabKey].page = 1;
+                renderAllTables();
+            });
+        });
+
+        // --- NEW/EDIT ENTRY PANEL ---
+        const overlay = document.getElementById('overlay');
+        const sidePanel = document.getElementById('side-panel');
+        
+        function openEntryPanel(type, isEdit = false) {
+            state.activePanelType = type;
+            
+            const title = type === 'fbig' ? 'FB/IG' : type === 'reddit' ? 'Reddit' : 'Review';
+            document.getElementById('panel-title').textContent = (isEdit ? `Edit ${title} Entry` : `New ${title} Entry`);
+            
+            document.getElementById('group-type').style.display = (type === 'fbig' || type === 'review') ? 'flex' : 'none';
+            document.getElementById('group-sentiment').style.display = type === 'review' ? 'flex' : 'none';
+            document.getElementById('link-fc-row').style.display = (type === 'fbig' || type === 'reddit') ? 'flex' : 'none';
+
+            if(type === 'fbig' || type === 'review') {
+                const tSelect = document.getElementById('form-type');
+                tSelect.innerHTML = '';
+                const opts = type === 'fbig' ? state.interactionTypes : ["Google Review", "iOS Review"];
+                opts.forEach(o => tSelect.innerHTML += `<option value="${o}">${o}</option>`);
+            }
+
+            if (!isEdit) {
+                document.getElementById('form-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('form-agent').selectedIndex = 0;
+                document.getElementById('form-related').selectedIndex = 0;
+                
+                document.getElementById('form-action').value = '';
+                document.getElementById('form-req').value = '';
+                
+                document.getElementById('form-link-fc').value = '';
+                document.getElementById('form-link-post').value = '';
+                document.getElementById('form-link-ref').value = '';
+                
+                document.querySelectorAll('#form-status .status-btn').forEach(b => b.classList.remove('selected'));
+                const defaultStatus = document.querySelector('#form-status .status-btn[data-value="Closed"]') || document.querySelector('#form-status .status-btn');
+                if(defaultStatus) defaultStatus.classList.add('selected');
+                state.newEntryStatus = defaultStatus ? defaultStatus.getAttribute('data-value') : '';
+            }
+            
+            document.getElementById('form-req').classList.remove('error');
+            document.getElementById('form-agent').classList.remove('error');
+
+            overlay.classList.add('active');
+            sidePanel.classList.add('active');
+        }
+
+        document.querySelectorAll('.btn-new-entry').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                state.editingId = null;
+                state.editingKey = null;
+                openEntryPanel(e.currentTarget.getAttribute('data-type'), false);
+            });
+        });
+
+        function closePanel() {
+            overlay.classList.remove('active');
+            sidePanel.classList.remove('active');
+            document.getElementById('filter-modal').classList.remove('active');
+            document.getElementById('delete-modal').classList.remove('active');
+            document.getElementById('import-modal').classList.remove('active');
+            pendingDelete = null;
+            state.importTarget = null;
+            
+            state.editingId = null;
+            state.editingKey = null;
+            
+            document.querySelectorAll('#form-status .status-btn').forEach(b => b.classList.remove('selected'));
+            const defaultStatus = document.querySelector('#form-status .status-btn[data-value="Closed"]') || document.querySelector('#form-status .status-btn');
+            if(defaultStatus) defaultStatus.classList.add('selected');
+            state.newEntryStatus = defaultStatus ? defaultStatus.getAttribute('data-value') : '';
+        }
+
+        document.getElementById('btn-close-panel').addEventListener('click', closePanel);
+        document.getElementById('btn-cancel').addEventListener('click', closePanel);
+        overlay.addEventListener('click', closePanel);
+
+        document.querySelectorAll('.btn-adv-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const activePage = document.querySelector('.page-view.active').id;
+                if (activePage === 'page-review') {
+                    document.getElementById('adv-req-group').style.display = 'none';
+                    document.getElementById('adv-sentiment-group').style.display = 'flex';
+                } else {
+                    document.getElementById('adv-req-group').style.display = 'flex';
+                    document.getElementById('adv-sentiment-group').style.display = 'none';
+                }
+
+                overlay.classList.add('active');
+                document.getElementById('filter-modal').classList.add('active');
+            });
+        });
+        document.getElementById('btn-close-filter').addEventListener('click', closePanel);
+
+        document.querySelectorAll('.btn-import-trigger').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                state.importTarget = e.currentTarget.getAttribute('data-type');
+                
+                let headers = [];
+                if (state.importTarget === 'reddit') {
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Link', 'Freshchat Link', 'Status', 'Request type', 'Date'];
+                } else if (state.importTarget === 'review') {
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Text', 'Status', 'Type of interaction', 'Date', 'Positive/ negative review'];
+                } else {
+                    headers = ['Name', 'Related to', 'Action Taken', 'Reference link', 'Post/thread Link', 'Fresh desk Link', 'Date', 'Status', 'Type of interaction', 'Request type'];
+                }
+
+                const theadTr = document.getElementById('import-thead-tr');
+                theadTr.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+                
+                const tbody = document.getElementById('import-tbody');
+                tbody.innerHTML = '';
+                
+                for(let i=0; i<10; i++) {
+                    addImportRow(headers.length);
+                }
+
+                overlay.classList.add('active');
+                document.getElementById('import-modal').classList.add('active');
+            });
+        });
+
+        function addImportRow(colCount) {
+            if(!colCount) colCount = document.getElementById('import-thead-tr').children.length;
+            const tr = document.createElement('tr');
+            for (let j = 0; j < colCount; j++) {
+                const td = document.createElement('td');
+                td.contentEditable = "true";
+                tr.appendChild(td);
+            }
+            document.getElementById('import-tbody').appendChild(tr);
+        }
+
+        document.getElementById('btn-add-import-row').addEventListener('click', () => {
+            for(let i=0; i<10; i++) addImportRow();
+            const container = document.querySelector('.import-table-container');
+            container.scrollTop = container.scrollHeight;
+        });
+
+        document.getElementById('import-tbody').addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            const rows = text.split(/\r\n|\n|\r/).filter(r => r.trim() !== '').map(row => row.split('\t'));
+            
+            let targetCell = e.target.closest('td');
+            let startRowIdx = 0;
+            if(targetCell) {
+               const tr = targetCell.parentElement;
+               startRowIdx = Array.from(tr.parentElement.children).indexOf(tr);
+            }
+            let startColIdx = targetCell ? targetCell.cellIndex : 0;
+
+            const tbody = document.getElementById('import-tbody');
+            const colCount = document.getElementById('import-thead-tr').children.length;
+
+            rows.forEach((row, i) => {
+                let tr = tbody.children[startRowIdx + i];
+                if (!tr) {
+                    tr = document.createElement('tr');
+                    for (let j = 0; j < colCount; j++) {
+                        const td = document.createElement('td');
+                        td.contentEditable = "true";
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+                row.forEach((cellData, j) => {
+                    if (startColIdx + j < colCount) {
+                        tr.children[startColIdx + j].innerText = cellData.trim();
+                    }
+                });
+            });
+        });
+
+        document.getElementById('btn-close-import').addEventListener('click', closePanel);
+        document.getElementById('btn-cancel-import').addEventListener('click', closePanel);
+
+        const addIfUniqueAndReturn = (arr, val) => {
+            if (!val || val === '-') return val;
+            const trimmed = val.trim();
+            const existing = arr.find(i => i.toLowerCase() === trimmed.toLowerCase());
+            if (existing) return existing;
+            arr.push(trimmed);
+            return trimmed;
+        };
+
+        document.getElementById('btn-confirm-import').addEventListener('click', async () => {
+            const tbody = document.getElementById('import-tbody');
+            const rowEls = Array.from(tbody.querySelectorAll('tr'));
+            
+            const rowsData = [];
+            rowEls.forEach(tr => {
+                const cols = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+                if (cols.some(c => c !== '')) rowsData.push(cols);
+            });
+
+            if (rowsData.length === 0) return closePanel();
+            
+            const selectedYear = document.getElementById('import-year').value;
+            const dbCasesToInsert = [];
+            
+            rowsData.forEach(cols => {
+                const requiredLength = document.getElementById('import-thead-tr').children.length;
+                while(cols.length < requiredLength) cols.push('');
+
+                let dateVal, agent, related, action, status, type, req, refLink, postLink, fcLink, sentimentVal;
+
+                if (state.importTarget === 'reddit') {
+                    agent = cols[0] ? cols[0] : '-';
+                    related = cols[1] ? cols[1] : '-';
+                    action = cols[2] ? cols[2] : '-';
+                    refLink = cols[3] ? cols[3] : '';
+                    postLink = cols[4] ? cols[4] : '';
+                    fcLink = cols[5] ? cols[5] : ''; 
+                    status = cols[6] ? cols[6] : 'Closed';
+                    type = '-'; 
+                    req = cols[7] ? cols[7] : '-';
+                    dateVal = cols[8] ? cols[8] : '';
+                } else if (state.importTarget === 'review') {
+                    agent = cols[0] ? cols[0] : '-';
+                    related = cols[1] ? cols[1] : '-';
+                    action = cols[2] ? cols[2] : '-';
+                    refLink = cols[3] ? cols[3] : '';
+                    postLink = cols[4] ? cols[4] : '';
+                    fcLink = '';
+                    status = cols[5] ? cols[5] : 'Closed';
+                    type = cols[6] ? cols[6] : '-';
+                    dateVal = cols[7] ? cols[7] : '';
+                    sentimentVal = cols[8] ? cols[8] : 'Positive';
+                    req = '-'; 
+                } else {
+                    agent = cols[0] ? cols[0] : '-';
+                    related = cols[1] ? cols[1] : '-';
+                    action = cols[2] ? cols[2] : '-';
+                    refLink = cols[3] ? cols[3] : '';
+                    postLink = cols[4] ? cols[4] : '';
+                    fcLink = cols[5] ? cols[5] : '';
+                    dateVal = cols[6] ? cols[6] : '';
+                    status = cols[7] ? cols[7] : 'Closed';
+                    type = cols[8] ? cols[8] : '-';
+                    req = cols[9] ? cols[9] : '-';
+                }
+
+                if (!dateVal) {
+                    dateVal = new Date().toISOString().split('T')[0];
+                } else {
+                    const hasYear = /\b\d{4}\b/.test(dateVal);
+                    const d = new Date(hasYear ? dateVal : `${dateVal} ${selectedYear}`);
+                    if (isNaN(d.valueOf())) {
+                        dateVal = new Date().toISOString().split('T')[0];
+                    } else {
+                        dateVal = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    }
+                }
+
+                if (refLink.toUpperCase() === 'N/A' || !refLink.includes('.') || refLink.includes(' ')) refLink = '';
+                if (state.importTarget !== 'review') {
+                    if (postLink.toUpperCase() === 'N/A' || !postLink.includes('.') || postLink.includes(' ')) postLink = '';
+                } else {
+                    if (postLink.toUpperCase() === 'N/A') postLink = '';
+                }
+                if (fcLink.toUpperCase() === 'N/A' || !fcLink.includes('.') || fcLink.includes(' ')) fcLink = '';
+
+                agent = addIfUniqueAndReturn(state.agents, agent);
+                related = addIfUniqueAndReturn(state.relatedTo, related);
+                action = addIfUniqueAndReturn(state.actions, action);
+                req = addIfUniqueAndReturn(state.requestTypes, req);
+                if (state.importTarget === 'fbig') type = addIfUniqueAndReturn(state.interactionTypes, type);
+
+                const entry = {
+                    id: Date.now() + Math.random().toString(), 
+                    date: dateVal,
+                    agent: agent,
+                    related: related,
+                    action: action,
+                    status: status,
+                    type: type,
+                    req: req,
+                    qa: false,
+                    links: { ref: refLink, post: postLink, fc: fcLink }
+                };
+                
+                if (state.importTarget === 'review') {
+                    entry.sentiment = (sentimentVal && sentimentVal.toLowerCase().includes('neg')) ? 'Negative' : 'Positive';
+                    if (["Positive", "Negative"].includes(entry.type)) {
+                        entry.sentiment = entry.type;
+                        entry.type = related !== '-' ? related : 'Google Review';
+                    } else if (["Positive", "Negative"].includes(entry.related)) {
+                        entry.sentiment = entry.related;
+                    }
+                }
+                
+                state.cases[state.importTarget].unshift(entry);
+
+                dbCasesToInsert.push({
+                    id: entry.id.toString(),
+                    source: state.importTarget,
+                    date: entry.date,
+                    agent: entry.agent,
+                    related: entry.related,
+                    type: entry.type || null,
+                    sentiment: entry.sentiment || null,
+                    action: entry.action,
+                    req: entry.req,
+                    status: entry.status,
+                    qa: entry.qa,
+                    link_fc: entry.links.fc || null,
+                    link_post: entry.links.post || null,
+                    link_ref: entry.links.ref || null
+                });
+            });
+
+            try {
+                if (dbCasesToInsert.length > 0) {
+                    const { error } = await supabase.from('cases').insert(dbCasesToInsert);
+                    if (error) throw error;
+                }
+                await window.saveSettingsToSupabase();
+                Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
+                renderAllTables();
+                closePanel();
+            } catch (e) {
+                console.error("Bulk insert error:", e);
+            }
+        });
+
+        document.querySelectorAll('#form-status .status-btn').forEach(b => {
+            b.addEventListener('click', (e) => {
+                document.querySelectorAll('#form-status .status-btn').forEach(btn => btn.classList.remove('selected'));
+                e.target.classList.add('selected');
+                state.newEntryStatus = e.target.getAttribute('data-value');
+            });
+        });
+
+        document.querySelectorAll('.sentiment-btn').forEach(b => {
+            b.addEventListener('click', (e) => {
+                document.querySelectorAll('.sentiment-btn').forEach(btn => btn.classList.remove('selected'));
+                e.target.classList.add('selected');
+                state.newEntrySentiment = e.target.getAttribute('data-value');
+            });
+        });
+
+        document.getElementById('form-agent').addEventListener('change', (e) => e.target.classList.remove('error'));
+
+        document.getElementById('btn-save').addEventListener('click', async () => {
+            const agent = document.getElementById('form-agent');
+            const req = document.getElementById('form-req');
+            let valid = true;
+            if(!agent.value) { agent.classList.add('error'); valid = false; }
+            if(!valid) return;
+
+            const entry = {
+                id: state.editingId ? state.editingId : Date.now().toString() + Math.random().toString(),
+                date: document.getElementById('form-date').value,
+                agent: agent.value,
+                req: req.value || '-',
+                action: document.getElementById('form-action').value || '-',
+                related: document.getElementById('form-related').value || '-',
+                status: state.newEntryStatus,
+                qa: state.editingId ? (state.cases[state.editingKey].find(c => c.id == state.editingId)?.qa || false) : false,
+                links: {
+                    fc: document.getElementById('form-link-fc').value,
+                    post: document.getElementById('form-link-post').value,
+                    ref: document.getElementById('form-link-ref').value
+                }
+            };
+
+            if(state.activePanelType === 'fbig') entry.type = document.getElementById('form-type').value;
+            if(state.activePanelType === 'review') {
+                entry.type = document.getElementById('form-type').value;
+                entry.sentiment = state.newEntrySentiment;
+            }
+
+            const dbCaseData = {
+                id: entry.id.toString(),
+                source: state.activePanelType,
+                date: entry.date,
+                agent: entry.agent,
+                related: entry.related,
+                type: entry.type || null,
+                sentiment: entry.sentiment || null,
+                action: entry.action,
+                req: entry.req,
+                status: entry.status,
+                qa: entry.qa,
+                link_fc: entry.links.fc || null,
+                link_post: entry.links.post || null,
+                link_ref: entry.links.ref || null
+            };
+
+            try {
+                if (state.editingId) {
+                    const { error } = await supabase.from('cases').update(dbCaseData).eq('id', dbCaseData.id);
+                    if (error) throw error;
+                    
+                    const idx = state.cases[state.editingKey].findIndex(c => c.id == state.editingId);
+                    if (idx > -1) state.cases[state.editingKey][idx] = entry;
+                } else {
+                    const { error } = await supabase.from('cases').insert([dbCaseData]);
+                    if (error) throw error;
+                    
+                    state.cases[state.activePanelType].unshift(entry);
+                }
+                Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
+                renderAllTables();
+                closePanel();
+            } catch (e) {
+                console.error("Save case error:", e);
+                // The panel will stay open, indicating the save failed visually to the user.
+            }
+        });
+
+        document.getElementById('btn-apply-adv').addEventListener('click', () => {
+            state.advFilters.startDate = document.getElementById('adv-start').value;
+            state.advFilters.endDate = document.getElementById('adv-end').value;
+            
+            const getCheckedValues = (key) => {
+                return Array.from(document.querySelectorAll(`.checkbox-item input[data-key="${key}"]:checked`)).map(cb => cb.value);
+            };
+
+            state.advFilters.agents = getCheckedValues('agents');
+            state.advFilters.requestTypes = getCheckedValues('requestTypes');
+            state.advFilters.relatedTo = getCheckedValues('relatedTo');
+            state.advFilters.actions = getCheckedValues('actions');
+            state.advFilters.statuses = getCheckedValues('statuses');
+            state.advFilters.sentiments = getCheckedValues('sentiments');
+            
+            document.querySelectorAll('.multi-select-wrapper').forEach(wrapper => {
+                const header = wrapper.querySelector('.ms-header');
+                const list = wrapper.querySelector('.checkbox-list');
+                const checkedCount = list.querySelectorAll('input:checked').length;
+                header.textContent = checkedCount > 0 ? `${checkedCount} selected` : header.getAttribute('data-placeholder');
+            });
+            
+            Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
+            renderAllTables();
+            closePanel();
+        });
+        
+        document.getElementById('btn-clear-adv').addEventListener('click', () => {
+            document.getElementById('adv-start').value = '';
+            document.getElementById('adv-end').value = '';
+            document.querySelectorAll('.checkbox-item input').forEach(cb => cb.checked = false);
+            
+            document.querySelectorAll('.multi-select-wrapper .ms-header').forEach(header => {
+                header.textContent = header.getAttribute('data-placeholder');
+            });
+            
+            state.advFilters = { startDate: '', endDate: '', agents: [], requestTypes: [], relatedTo: [], actions: [], statuses: [], sentiments: [] };
+            Object.keys(state.pagination).forEach(k => state.pagination[k].page = 1);
+            renderAllTables();
+        });
+
+        // --- EDIT DATA PAGE ---
+        const cntMap = {
+            agents: 'agent', relatedTo: 'related', actions: 'action', 
+            requestTypes: 'req', statuses: 'status', interactionTypes: 'interaction'
+        };
+
+        function renderEditLists() {
+            renderEditList('list-agent', state.agents, 'agents');
+            renderEditList('list-related', state.relatedTo, 'relatedTo');
+            renderEditList('list-action', state.actions, 'actions');
+            renderEditList('list-req', state.requestTypes, 'requestTypes', document.getElementById('search-edit-req').value);
+            renderEditList('list-status', state.statuses, 'statuses');
+            renderEditList('list-interaction', state.interactionTypes, 'interactionTypes');
+        }
+
+        function renderEditList(containerId, arr, key, filterStr = '') {
+            const c = document.getElementById(containerId);
+            const cnt = document.getElementById('cnt-' + cntMap[key]);
+            if(cnt) cnt.textContent = arr.length;
+            
+            c.innerHTML = '';
+            let dispArr = arr;
+            if (filterStr) dispArr = arr.filter(i => i.toLowerCase().includes(filterStr.toLowerCase()));
+            
+            let limit = dispArr.length;
+            if(key === 'requestTypes' && !filterStr && limit > 8) limit = 8;
+            
+            for(let i=0; i<limit; i++) {
+                let upBtn = `<button class="btn-icon" onclick="window.moveEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}', -1)">${svgUp}</button>`;
+                let downBtn = `<button class="btn-icon" onclick="window.moveEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}', 1)">${svgDown}</button>`;
+                
+                if (filterStr) {
+                    upBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgUp}</button>`;
+                    downBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgDown}</button>`;
+                } else {
+                    if (i === 0) upBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgUp}</button>`;
+                    if (i === arr.length - 1) downBtn = `<button class="btn-icon" disabled style="opacity:0.3">${svgDown}</button>`;
+                }
+
+                c.innerHTML += `<div class="edit-item">
+                    <span>${dispArr[i]}</span>
+                    <div style="display:flex; gap:2px; align-items:center;">
+                        ${upBtn}
+                        ${downBtn}
+                        <button class="btn-icon" onclick="window.delEditItem('${key}', '${dispArr[i].replace(/'/g, "\\'")}')" style="margin-left:8px;">${svgDel}</button>
+                    </div>
+                </div>`;
+            }
+            if(key === 'requestTypes' && limit < dispArr.length) {
+                c.innerHTML += `<div class="edit-item" style="justify-content:center;color:var(--text-muted);"><em>... and ${dispArr.length - limit} more. Search to find.</em></div>`;
+            }
+        }
+
+        window.moveEditItem = function(key, val, direction) {
+            const arr = state[key];
+            const idx = arr.indexOf(val);
+            if (idx === -1) return;
+            const newIdx = idx + direction;
+            if (newIdx < 0 || newIdx >= arr.length) return;
+            
+            const temp = arr[idx];
+            arr[idx] = arr[newIdx];
+            arr[newIdx] = temp;
+            
+            window.saveSettingsToSupabase();
+            renderEditLists();
+            populateDropdowns();
+            populateAdvFilters();
+        };
+
+        window.addEditItem = function(key, inpId) {
+            const inp = document.getElementById(inpId);
+            const val = inp.value.trim();
+            const valLower = val.toLowerCase();
+            
+            if(val && !state[key].some(i => i.toLowerCase() === valLower)) {
+                state[key].push(val);
+                inp.value = '';
+                window.saveSettingsToSupabase();
+                renderEditLists();
+                populateDropdowns();
+                populateAdvFilters();
+            } else if (val) {
+                inp.value = '';
+            }
+        };
+
+        window.delEditItem = function(key, val) {
+            state[key] = state[key].filter(i => i !== val);
+            window.saveSettingsToSupabase();
+            renderEditLists();
+            populateDropdowns();
+            populateAdvFilters();
+        };
+
+        ['inp-add-agent', 'inp-add-related', 'inp-add-action', 'inp-add-req', 'inp-add-status', 'inp-add-interaction'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('keypress', (e) => {
+                    if(e.key === 'Enter') e.target.nextElementSibling.click();
+                });
+            }
+        });
+        
+        function setupDateControlListeners() {
+            document.getElementById('btn-wk-prev').addEventListener('click', () => {
+                state.viewState.weeklyEndMonday = addDays(state.viewState.weeklyEndMonday, -7);
+                renderWeeklyReview();
+            });
+            document.getElementById('btn-wk-next').addEventListener('click', () => {
+                state.viewState.weeklyEndMonday = addDays(state.viewState.weeklyEndMonday, 7);
+                renderWeeklyReview();
+            });
+
+            document.getElementById('btn-mo-prev').addEventListener('click', () => {
+                const d = new Date(state.viewState.monthlyDate + 'T12:00:00');
+                d.setMonth(d.getMonth() - 1);
+                state.viewState.monthlyDate = d.toISOString().split('T')[0];
+                renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+            });
+            document.getElementById('btn-mo-next').addEventListener('click', () => {
+                const d = new Date(state.viewState.monthlyDate + 'T12:00:00');
+                d.setMonth(d.getMonth() + 1);
+                state.viewState.monthlyDate = d.toISOString().split('T')[0];
+                renderMonthlyReview(document.querySelector('.tab.active').getAttribute('data-tab'));
+            });
+        }
+
+        function renderWeeklyReview() {
+            if(!state.viewState.weeklyEndMonday) state.viewState.weeklyEndMonday = getMonday(new Date().toISOString().split('T')[0]);
+            
+            const weeks = [];
+            for(let i=5; i>=0; i--) {
+                weeks.push(addDays(state.viewState.weeklyEndMonday, -i*7));
+            }
+            
+            const weekLabels = weeks.map(w => new Date(w + 'T12:00:00').toLocaleDateString('en-US', {month: 'short', day: 'numeric'}));
+            document.getElementById('wk-range-label').textContent = `${weekLabels[0]} – ${weekLabels[5]}`;
+            
+            const relMap = {}; state.relatedTo.forEach(r => relMap[r.trim().toLowerCase()] = r);
+            const actMap = {}; state.actions.forEach(a => actMap[a.trim().toLowerCase()] = a);
+            const reqMap = {}; state.requestTypes.forEach(r => reqMap[r.trim().toLowerCase()] = r);
+
+            const relData = {}; state.relatedTo.forEach(r => relData[r] = [0,0,0,0,0,0]);
+            const actData = {}; 
+            reportActionKeys.forEach(k => actData[k] = [0,0,0,0,0,0]);
+            const weeklyTotals = [0,0,0,0,0,0];
+            const latestReqs = {};
+            
+            const allCases = [...state.cases.fbig];
+            
+            allCases.forEach(c => {
+                const wKey = getMonday(c.date);
+                const wIdx = weeks.indexOf(wKey);
+                if (wIdx > -1) {
+                    weeklyTotals[wIdx]++;
+                    
+                    let mRel = c.related ? c.related.trim() : null;
+                    if (mRel) {
+                        mRel = relMap[mRel.toLowerCase()] || mRel;
+                        if (!relData[mRel]) relData[mRel] = [0,0,0,0,0,0];
+                        relData[mRel][wIdx]++;
+                    }
+                    
+                    let mAct = c.action ? c.action.trim() : null;
+                    if (mAct) {
+                        const mappedAct = mapReportAction(mAct);
+                        if (mappedAct !== "OTHER") {
+                            actData[mappedAct][wIdx]++;
+                        }
+                    }
+                    
+                    if (wIdx === 5 && c.req && c.req !== '-') {
+                        const mReq = reqMap[c.req.trim().toLowerCase()] || c.req;
+                        latestReqs[mReq] = (latestReqs[mReq] || 0) + 1;
+                    }
+                }
+            });
+
+            const totalTickets = weeklyTotals.reduce((a,b)=>a+b, 0);
+
+            document.getElementById('wk-stats').innerHTML = `
+                <div class="stat-card"><h3>Total Weeks</h3><div class="val">6</div></div>
+                <div class="stat-card"><h3>Total Tickets</h3><div class="val">${totalTickets}</div></div>
+                <div class="stat-card"><h3>Avg Tickets/Week</h3><div class="val">${(totalTickets/6).toFixed(1)}</div></div>
+                <div class="stat-card"><h3>Last Updated</h3><div class="val" style="font-size:18px;">${weekLabels[5]}</div></div>
+            `;
+
+            let html = `
+                <table class="da-table" style="margin-bottom:20px;">
+                    <tr><th>Ticket Related</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
+            `;
+            Object.keys(relData).forEach(k => {
+                html += `<tr><td>${k}</td>${relData[k].map(v=>`<td>${v}</td>`).join('')}</tr>`;
+            });
+            html += `<tr class="total-row"><td>Grand Total</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr></table>`;
+
+            html += `
+                <table class="da-table" style="margin-bottom:20px;">
+                    <tr><th>Action Taken</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
+            `;
+            Object.keys(actData).forEach(k => {
+                html += `<tr><td>${k}</td>${actData[k].map(v=>`<td>${v}</td>`).join('')}</tr>`;
+            });
+            html += `<tr class="total-row"><td>Grand Total</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr></table>`;
+
+            html += `
+                <table class="da-table">
+                    <tr><th>Weeks</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
+                    <tr class="total-row"><td>Weekly Handled Tickets</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr>
+                </table>
+            `;
+            document.getElementById('wk-tables').innerHTML = html;
+
+            destroyChart('wk1'); destroyChart('wk2'); destroyChart('wk3');
+            
+            charts['wk1'] = new Chart(document.getElementById('wk-chart1'), {
+                type: 'line',
+                data: { labels: weekLabels, datasets: [{ label: 'Tickets', data: weeklyTotals, borderColor: '#534AB7', backgroundColor: 'rgba(83, 74, 183, 0.1)', fill: true, tension: 0.3 }] },
+                options: { responsive: true, plugins: { title: { display: true, text: 'Weekly Handled Tickets', align: 'start' }, legend: { display: false } } }
+            });
+
+            charts['wk2'] = new Chart(document.getElementById('wk-chart2'), {
+                type: 'bar',
+                data: { 
+                    labels: Object.keys(relData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return lines;
+                    }), 
+                    datasets: weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(relData).map(k => relData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { title: { display: true, text: 'Ticket Related', align: 'start' } },
+                    scales: { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
+            });
+
+            charts['wk3'] = new Chart(document.getElementById('wk-chart3'), {
+                type: 'bar',
+                data: { 
+                    labels: Object.keys(actData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return lines;
+                    }), 
+                    datasets: weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(actData).map(k => actData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { title: { display: true, text: 'Action Taken', align: 'start' } },
+                    scales: { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
+            });
+
+            const sortedReqs = Object.entries(latestReqs).sort((a,b) => b[1] - a[1]);
+            const top5 = sortedReqs.slice(0, 5);
+            
+            let listHtml = `<table class="list-table">`;
+            sortedReqs.forEach(k => listHtml += `<tr><td>${k[0]}</td><td><span class="badge badge-type">${k[1]}</span></td></tr>`);
+            if (sortedReqs.length === 0) listHtml += `<tr><td style="color:var(--text-muted);text-align:center;">No data for the latest week</td></tr>`;
+            listHtml += `</table>`;
+
+            document.getElementById('wk-latest').innerHTML = `
+                <div><h3 style="margin-bottom:12px;font-size:12px;text-transform:uppercase;color:var(--text-muted);">All Request Types (Latest Week)</h3>${listHtml}</div>
+                <div><h3 style="margin-bottom:12px;font-size:12px;text-transform:uppercase;color:var(--text-muted);">Top 5 Request Types</h3><canvas id="wk-chart4" height="200"></canvas></div>
+            `;
+            
+            destroyChart('wk4');
+            charts['wk4'] = new Chart(document.getElementById('wk-chart4'), {
+                type: 'bar',
+                data: { labels: top5.map(x=>x[0]), datasets: [{ data: top5.map(x=>x[1]), backgroundColor: ['#3C3489', '#534AB7', '#736ACC', '#9189DF', '#B2ACED'] }] },
+                options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderMonthlyReview(tab, targetContainerId = 'mo-container', skipCharts = false) {
+            const targetD = new Date(state.viewState.monthlyDate + 'T12:00:00');
+            const targetMonth = targetD.getMonth();
+            const targetYear = targetD.getFullYear();
+            
+            if (!skipCharts) {
+                document.getElementById('mo-range-label').textContent = targetD.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+            }
+
+            if (tab === 'review') {
+                let targetCases = state.cases.review.map(c=>({...c, _source:'review'}));
+                targetCases = targetCases.filter(c => {
+                    const cd = new Date(c.date + 'T12:00:00');
+                    return cd.getMonth() === targetMonth && cd.getFullYear() === targetYear;
+                });
+
+                let iosPos = 0, iosNeg = 0, gogPos = 0, gogNeg = 0;
+
+                targetCases.forEach(c => {
+                    const typeLower = (c.type || c.related || '').toLowerCase();
+                    const sentLower = (c.sentiment || '').toLowerCase();
+                    
+                    const isPos = sentLower.includes('pos');
+                    const isNeg = sentLower.includes('neg');
+
+                    if (typeLower.includes('ios')) {
+                        if (isPos) iosPos++;
+                        if (isNeg) iosNeg++;
+                    } else {
+                        // Count anything else as Google Review
+                        if (isPos) gogPos++;
+                        if (isNeg) gogNeg++;
+                    }
+                });
+
+                const totalPos = iosPos + gogPos;
+                const totalNeg = iosNeg + gogNeg;
+
+                let html = `
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+                        <div class="da-section" style="margin: 0;">
+                            <table class="da-table">
+                                <tr>
+                                    <th>Platform</th>
+                                    <th>Positive</th>
+                                    <th>Negative</th>
+                                    <th>Total</th>
+                                </tr>
+                                <tr>
+                                    <td>iOS Review</td>
+                                    <td>${iosPos}</td>
+                                    <td>${iosNeg}</td>
+                                    <td>${iosPos + iosNeg}</td>
+                                </tr>
+                                <tr>
+                                    <td>Google Review</td>
+                                    <td>${gogPos}</td>
+                                    <td>${gogNeg}</td>
+                                    <td>${gogPos + gogNeg}</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td>Grand Total</td>
+                                    <td>${totalPos}</td>
+                                    <td>${totalNeg}</td>
+                                    <td>${totalPos + totalNeg}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="da-section chart-container" style="margin: 0; padding: 20px;">
+                            <canvas id="mo-chart-review" height="200"></canvas>
+                        </div>
+                    </div>
+                `;
+                document.getElementById(targetContainerId).innerHTML = html;
+
+                if (skipCharts) return;
+
+                destroyChart('mo1');
+                destroyChart('mo-chart-rel');
+                destroyChart('mo-chart-act');
+                destroyChart('mo-chart-review');
+
+                charts['mo-chart-review'] = new Chart(document.getElementById('mo-chart-review'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['iOS Review', 'Google Review'],
+                        datasets: [
+                            { label: 'Positive', data: [iosPos, gogPos], backgroundColor: '#8EC25B' },
+                            { label: 'Negative', data: [iosNeg, gogNeg], backgroundColor: '#E67A7A' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: { display: true, text: 'Review Sentiments by Platform', align: 'start' }
+                        }
+                    }
+                });
+
+                return;
+            }
+
+            let targetCases = [];
+            if (tab === 'all') {
+                targetCases = [...state.cases.fbig.map(c=>({...c, _source:'fbig'}))];
+            } else if (tab === 'fb') {
+                targetCases = state.cases.fbig.filter(c => {
+                    const t = c.type ? c.type.trim().toLowerCase() : '';
+                    return ["dm", "page comments", "group comments"].includes(t);
+                }).map(c=>({...c, _source:'fbig'}));
+            } else if (tab === 'ig') {
+                targetCases = state.cases.fbig.filter(c => {
+                    const t = c.type ? c.type.trim().toLowerCase() : '';
+                    return ["instagram comments", "instagram dm", "instagram"].includes(t);
+                }).map(c=>({...c, _source:'fbig'}));
+            } else if (tab === 'reddit') {
+                targetCases = state.cases.reddit.map(c=>({...c, _source:'reddit'}));
+            }
+
+            targetCases = targetCases.filter(c => {
+                const cd = new Date(c.date + 'T12:00:00');
+                return cd.getMonth() === targetMonth && cd.getFullYear() === targetYear;
+            });
+
+            const monthShort = targetD.toLocaleDateString('en-US', {month: 'short'});
+            const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+            let bucketStarts = [1, 8, 15, 22, 29].filter(d => d <= daysInMonth);
+            let weekLabels = bucketStarts.map(d => `${d} ${monthShort}`);
+
+            // Remove 'fb' from this list so it uses the weekly buckets again
+            const isMonthlyTotalOnly = (tab === 'reddit' || tab === 'ig');
+            if (isMonthlyTotalOnly) {
+                bucketStarts = [1];
+                const monthLong = targetD.toLocaleDateString('en-US', {month: 'long'});
+                weekLabels = [monthLong];
+            }
+
+            const relMap = {}; state.relatedTo.forEach(r => relMap[r.trim().toLowerCase()] = r);
+            const actMap = {}; state.actions.forEach(a => actMap[a.trim().toLowerCase()] = a);
+            const reqMap = {}; state.requestTypes.forEach(r => reqMap[r.trim().toLowerCase()] = r);
+            const chanMap = {}; state.interactionTypes.forEach(t => chanMap[t.trim().toLowerCase()] = t);
+
+            const relData = {}; state.relatedTo.forEach(r => relData[r] = new Array(bucketStarts.length).fill(0));
+            const actData = {}; 
+            reportActionKeys.forEach(k => actData[k] = new Array(bucketStarts.length).fill(0));
+            const weeklyTotals = new Array(bucketStarts.length).fill(0);
+            
+            const topReqsMap = {};
+            const channelsMap = {};
+
+            targetCases.forEach(c => {
+                const day = new Date(c.date + 'T12:00:00').getDate();
+                let wIdx = 0;
+                
+                if (!isMonthlyTotalOnly) {
+                    if(day >= 29) wIdx = 4;
+                    else if(day >= 22) wIdx = 3;
+                    else if(day >= 15) wIdx = 2;
+                    else if(day >= 8) wIdx = 1;
+
+                    if (wIdx >= bucketStarts.length) wIdx = bucketStarts.length - 1;
+                }
+
+                weeklyTotals[wIdx]++;
+                
+                let mRel = c.related ? c.related.trim() : null;
+                if (mRel) {
+                    mRel = relMap[mRel.toLowerCase()] || mRel;
+                    if (!relData[mRel]) relData[mRel] = new Array(bucketStarts.length).fill(0);
+                    relData[mRel][wIdx]++;
+                }
+                
+                let mAct = c.action ? c.action.trim() : null;
+                if (mAct) {
+                    const mappedAct = mapReportAction(mAct);
+                    if (mappedAct !== "OTHER") {
+                        actData[mappedAct][wIdx]++;
+                    }
+                }
+                
+                if (c.req && c.req !== '-') {
+                    const mReq = reqMap[c.req.trim().toLowerCase()] || c.req;
+                    topReqsMap[mReq] = (topReqsMap[mReq] || 0) + 1;
+                }
+                
+                if (c.type) {
+                    const mChan = chanMap[c.type.trim().toLowerCase()] || c.type;
+                    channelsMap[mChan] = (channelsMap[mChan] || 0) + 1;
+                }
+                if (tab === 'reddit') channelsMap['Reddit Submissions'] = (channelsMap['Reddit Submissions'] || 0) + 1;
+            });
+
+            const sumTotal = weeklyTotals.reduce((a,b)=>a+b,0);
+            const sortedReqs = Object.entries(topReqsMap).sort((a,b) => b[1] - a[1]);
+            const topKey = sortedReqs.length > 0 ? sortedReqs[0][0] : "None";
+            const topVal = sortedReqs.length > 0 ? sortedReqs[0][1] : 0;
+            
+            let html = `<div class="stat-grid">
+                <div class="stat-card"><h3>Total Tickets</h3><div class="val">${sumTotal}</div></div>
+                <div class="stat-card"><h3>Total Weeks</h3><div class="val">${bucketStarts.length}</div></div>
+                <div class="stat-card"><h3>Top Request</h3><div class="val" style="font-size:16px;">${topKey} <span>${topVal}</span></div></div>
+            </div>`;
+
+            if(Object.keys(channelsMap).length > 0 && tab !== 'all') {
+                html += `<div class="stat-grid">`;
+                Object.keys(channelsMap).forEach(k => {
+                    html += `<div class="stat-card" style="border-color:var(--purple-border); background:var(--purple-bg);">
+                                <h3 style="color:var(--purple-text);">${k}</h3>
+                                <div class="val" style="color:var(--purple-main);">${channelsMap[k]}</div>
+                             </div>`;
+                });
+                html += `</div>`;
+            }
+
+            const isSingleCol = bucketStarts.length === 1;
+
+            let tbl1 = `<table class="da-table" ${!isSingleCol ? 'style="margin-bottom:20px;"' : ''}>
+                <tr><th>Ticket Related</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>`;
+            Object.keys(relData).forEach(k => tbl1 += `<tr><td>${k}</td>${relData[k].map(v=>`<td>${v}</td>`).join('')}</tr>`);
+            tbl1 += `<tr class="total-row"><td>Grand Total</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr></table>`;
+
+            let tbl2 = `<table class="da-table" ${!isSingleCol ? 'style="margin-bottom:20px;"' : ''}>
+                <tr><th>Action Taken</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>`;
+            Object.keys(actData).forEach(k => tbl2 += `<tr><td>${k}</td>${actData[k].map(v=>`<td>${v}</td>`).join('')}</tr>`);
+            tbl2 += `<tr class="total-row"><td>Grand Total</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr></table>`;
+
+            let tbl3 = `<table class="da-table">
+                <tr><th>${isMonthlyTotalOnly ? 'Month' : 'Weeks'}</th>${weekLabels.map(w=>`<th>${w}</th>`).join('')}</tr>
+                <tr class="total-row"><td>${isMonthlyTotalOnly ? 'Total Handled Tickets' : 'Weekly Handled Tickets'}</td>${weeklyTotals.map(v=>`<td>${v}</td>`).join('')}</tr>
+            </table>`;
+
+            if (isSingleCol) {
+                html += `<div style="display:flex; gap:24px; margin-bottom:24px; align-items: flex-start;">
+                            <div class="da-section" style="flex:1; margin-bottom:0;">${tbl1}</div>
+                            <div class="da-section" style="flex:1; margin-bottom:0;">${tbl2}</div>
+                         </div>
+                         <div class="da-section">${tbl3}</div>`;
+            } else {
+                html += `<div class="da-section">${tbl1}${tbl2}${tbl3}</div>`;
+            }
+
+            const isPieChart = (tab === 'ig' || tab === 'reddit');
+            html += `<div class="da-section chart-container"><canvas id="mo-chart-rel" height="${isPieChart ? '300' : '100'}"></canvas></div>`;
+            html += `<div class="da-section chart-container"><canvas id="mo-chart-act" height="${isPieChart ? '300' : '120'}"></canvas></div>`;
+
+            const top10 = sortedReqs.slice(0, 10);
+            let listHtml = `<table class="list-table">`;
+            top10.forEach(k => listHtml += `<tr><td>${k[0]}</td><td><span class="badge badge-type">${k[1]}</span></td></tr>`);
+            if (top10.length === 0) listHtml += `<tr><td style="color:var(--text-muted);text-align:center;">No data available</td></tr>`;
+            listHtml += `</table>`;
+
+            html += `<div class="da-section two-col-grid">
+                <div><h3 style="margin-bottom:12px;font-size:12px;text-transform:uppercase;color:var(--text-muted);">Top Request Types</h3>${listHtml}</div>
+                <div><canvas id="mo-chart" height="250"></canvas></div>
+            </div>`;
+
+            document.getElementById(targetContainerId).innerHTML = html;
+
+            if (skipCharts) return;
+
+            destroyChart('mo1');
+            destroyChart('mo-chart-rel');
+            destroyChart('mo-chart-act');
+            destroyChart('mo-chart-review');
+
+            charts['mo-chart-rel'] = new Chart(document.getElementById('mo-chart-rel'), {
+                type: isPieChart ? 'pie' : 'bar',
+                data: { 
+                    labels: Object.keys(relData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return isPieChart ? lines.join(' ') : lines;
+                    }), 
+                    datasets: isPieChart ? [{
+                        data: Object.keys(relData).map(k => relData[k][0]),
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0', '#3C3489', '#8EC25B', '#E6AA5C', '#E67A7A', '#4D3310', '#1A385A', '#22361A']
+                    }] : weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(relData).map(k => relData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: !isPieChart,
+                    plugins: { 
+                        title: { display: true, text: 'Ticket Related', align: 'start' },
+                        legend: { display: isPieChart, position: 'right' }
+                    },
+                    scales: isPieChart ? undefined : { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
+            });
+
+            charts['mo-chart-act'] = new Chart(document.getElementById('mo-chart-act'), {
+                type: isPieChart ? 'pie' : 'bar',
+                data: { 
+                    labels: Object.keys(actData).map(label => {
+                        let words = label.split(' '), lines = [], cur = '';
+                        words.forEach(w => {
+                            if ((cur + w).length > 15) {
+                                if (cur) lines.push(cur.trim());
+                                cur = w + ' ';
+                            } else {
+                                cur += w + ' ';
+                            }
+                        });
+                        if (cur) lines.push(cur.trim());
+                        return isPieChart ? lines.join(' ') : lines;
+                    }), 
+                    datasets: isPieChart ? [{
+                        data: Object.keys(actData).map(k => actData[k][0]),
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0', '#3C3489', '#8EC25B', '#E6AA5C', '#E67A7A', '#4D3310', '#1A385A', '#22361A']
+                    }] : weekLabels.map((wl, i) => ({ 
+                        label: wl, 
+                        data: Object.keys(actData).map(k => actData[k][i]), 
+                        backgroundColor: ['#E07070', '#EF9F27', '#97C459', '#85B7EB', '#534AB7', '#9388E0'][i%6] 
+                    }))
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: !isPieChart,
+                    plugins: { 
+                        title: { display: true, text: 'Action Taken', align: 'start' },
+                        legend: { display: isPieChart, position: 'right' }
+                    },
+                    scales: isPieChart ? undefined : { 
+                        x: { 
+                            ticks: { 
+                                maxRotation: 0, 
+                                minRotation: 0,
+                                autoSkip: false,
+                                font: { size: 10 }
+                            } 
+                        } 
+                    }
+                }
+            });
+
+            charts['mo1'] = new Chart(document.getElementById('mo-chart'), {
+                type: 'bar',
+                data: { labels: top10.map(x=>x[0]), datasets: [{ data: top10.map(x=>x[1]), backgroundColor: '#534AB7' }] },
+                options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        document.querySelectorAll('.tab').forEach(t => {
+            t.addEventListener('click', e => {
+                document.querySelectorAll('.tab').forEach(tb => tb.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                renderMonthlyReview(e.currentTarget.getAttribute('data-tab'));
+            });
+        });
+
+        function destroyChart(id) {
+            if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+        }
+
+        // --- EXPORT LOGIC ---
+        function handleExport() {
+            const activePage = document.querySelector('.page-view.active').id;
+            const container = document.getElementById(activePage);
+            let data = [];
+            let headers = [];
+            let filename = 'export.csv';
+
+            if (activePage === 'page-fbig') {
+                headers = ['Date', 'Agent Name', 'Related To', 'Type of Interaction', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link', 'QA'];
+                filename = 'fbig_cases.csv';
+                data = getFilteredCases('fbig', false).map(c => [
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
+                ]);
+            } else if (activePage === 'page-reddit') {
+                headers = ['Date', 'Agent Name', 'Related To', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link', 'QA'];
+                filename = 'reddit_cases.csv';
+                data = getFilteredCases('reddit', false).map(c => [
+                    formatDate(c.date), c.agent, c.related, c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
+                ]);
+            } else if (activePage === 'page-review') {
+                headers = ['Date', 'Agent Name', 'Related To', 'Type', 'Sentiment', 'Action Taken', 'Post/Thread Text', 'Status', 'Reference Link', 'QA'];
+                filename = 'review_cases.csv';
+                data = getFilteredCases('review', false).map(c => [
+                    formatDate(c.date), c.agent, c.related || '-', c.type, c.sentiment, c.action, c.links.post || '', c.status, c.links.ref || '', c.qa ? 'Yes' : 'No'
+                ]);
+            } else if (activePage === 'page-pending') {
+                headers = ['Date', 'Source', 'Agent Name', 'Related To', 'Type', 'Request Type', 'Action Taken', 'Status', 'Freshchat Link', 'Post / Thread Link', 'Reference Link', 'QA'];
+                filename = 'pending_cases.csv';
+                data = getFilteredCases('pending', true).map(c => [
+                    formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
+                ]);
+            } else if (activePage === 'page-weekly') {
+                let csvStr = '';
+                const tables = container.querySelectorAll('.da-table');
+                if(tables.length === 0) return alert('No data to export here.');
+                
+                tables.forEach(table => {
+                    const rows = table.querySelectorAll('tr');
+                    rows.forEach(tr => {
+                        const rowData = [];
+                        const cols = tr.querySelectorAll('th, td');
+                        cols.forEach(c => rowData.push('"' + c.innerText.replace(/"/g, '""') + '"'));
+                        csvStr += rowData.join(',') + '\n';
+                    });
+                    csvStr += '\n';
+                });
+                
+                filename = 'weekly_review.csv';
+                
+                const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            } else if (activePage === 'page-monthly') {
+                let csvStr = '';
+                const tabs = ['all', 'fb', 'ig', 'reddit', 'review'];
+                const tabNames = {'all': 'FB & Instagram', 'fb': 'Facebook', 'ig': 'Instagram', 'reddit': 'Reddit', 'review': 'Reviews'};
+                
+                const tempContainer = document.createElement('div');
+                tempContainer.id = 'temp-export-container';
+                tempContainer.style.display = 'none';
+                document.body.appendChild(tempContainer);
+                
+                tabs.forEach(t => {
+                    csvStr += `--- ${tabNames[t].toUpperCase()} ---\n\n`;
+                    renderMonthlyReview(t, 'temp-export-container', true);
+                    
+                    const tables = tempContainer.querySelectorAll('.da-table');
+                    tables.forEach(table => {
+                        const rows = table.querySelectorAll('tr');
+                        rows.forEach(tr => {
+                            const rowData = [];
+                            const cols = tr.querySelectorAll('th, td');
+                            cols.forEach(c => rowData.push('"' + c.innerText.replace(/"/g, '""') + '"'));
+                            csvStr += rowData.join(',') + '\n';
+                        });
+                        csvStr += '\n';
+                    });
+                    csvStr += '\n\n';
+                });
+                
+                document.body.removeChild(tempContainer);
+                
+                // Restore active tab view
+                const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
+                renderMonthlyReview(activeTab);
+                
+                filename = 'monthly_review_full.csv';
+                
+                const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+            }
+
+            if (data.length === 0) {
+                alert('No data to export based on current view/filters.');
+                return;
+            }
+
+            let csvContent = headers.join(",") + "\n";
+            data.forEach(row => {
+                let formattedRow = row.map(field => {
+                    if (field == null) field = '';
+                    let strField = String(field);
+                    if (strField.includes(',') || strField.includes('"') || strField.includes('\n')) {
+                        strField = '"' + strField.replace(/"/g, '""') + '"';
+                    }
+                    return strField;
+                });
+                csvContent += formattedRow.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- AUTHENTICATION BOOT ---
+        const authView = document.getElementById('auth-view');
+        const appContainer = document.getElementById('app-container');
+        const authError = document.getElementById('auth-error');
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Logging in...';
+            btn.disabled = true;
+            authError.style.display = 'none';
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+
+            if (error) {
+                authError.textContent = error.message;
+                authError.style.display = 'block';
+            } else {
+                showApp();
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.reload();
+        });
+
+        function showApp() {
+            authView.style.display = 'none';
+            appContainer.style.display = 'flex';
+            
+            // Only trigger database load if it hasn't been initialized yet
+            if (!window.appInitialized) {
+                init();
+                window.appInitialized = true;
+            }
+        }
+
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                showApp();
+            } else {
+                authView.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+            
+            // Re-direct to login screen instantly if session expires or manual logout happens
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
+                    window.location.reload();
+                }
+            });
+        }
+        
+        // Start app by checking authentication status
+        checkAuth();
+
+    </script>
+</body>
+</html>
