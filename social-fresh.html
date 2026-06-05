@@ -592,6 +592,77 @@
         .import-table th { background: var(--bg-sidebar); border: 1px solid var(--border-light); border-top: none; border-bottom: 1px solid var(--border-light); padding: 8px; font-size: 11px; white-space: nowrap; position: sticky; top: 0; z-index: 2; text-transform: uppercase; color: var(--text-muted); }
         .import-table td { border: 1px solid var(--border-light); padding: 6px 8px; font-size: 12px; min-width: 100px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: none; }
         .import-table td:focus { border: 1px solid var(--purple-main); background: var(--purple-bg); color: var(--purple-text); overflow: visible; white-space: normal; position: relative; z-index: 1; box-shadow: inset 0 0 0 1px var(--purple-main); }
+        
+        /* Modern Rich Text Editor */
+        .modern-rte {
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .modern-rte:focus-within {
+            border-color: var(--purple-main);
+            box-shadow: 0 0 0 1px var(--purple-main);
+        }
+        .modern-rte .rte-content {
+            min-height: 150px;
+            padding: 12px;
+            outline: none;
+            font-size: 13px;
+            color: var(--text-main);
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+        .modern-rte .rte-content:empty:before {
+            content: attr(placeholder);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+        .modern-rte .rte-toolbar-middle {
+            display: flex;
+            gap: 4px;
+            padding: 6px 12px;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-main);
+            align-items: center;
+        }
+        .modern-rte .rte-utility-bottom {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-sidebar); /* light gray */
+            border-top: 1px solid var(--border-light);
+            align-items: center;
+        }
+        .modern-rte button {
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            padding: 6px;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .modern-rte button:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+        .modern-rte button svg {
+            width: 14px;
+            height: 14px;
+        }
+        .modern-rte .rte-divider {
+            width: 1px;
+            height: 14px;
+            background: var(--border-light);
+            margin: 0 4px;
+        }
     </style>
 </head>
 <body>
@@ -1152,6 +1223,102 @@
                             <input type="text" id="form-link-ref" class="form-control" placeholder="Paste link…">
                         </div>
                     </div>
+
+                    <!-- Freshchat Integration Section -->
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+                        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em;">Freshchat</h3>
+                        
+                        <div class="form-group">
+                            <label>Contact</label>
+                            <input type="email" id="form-fc-contact" class="form-control" placeholder="user@email.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <input type="text" id="form-fc-subject" class="form-control" placeholder="Ticket Subject">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="form-fc-status" class="form-control">
+                                    <option value="" disabled selected>Select status...</option>
+                                    <option value="open">Open</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
+                                    <option value="waiting on customer 24h">Waiting on customer 24h</option>
+                                    <option value="waiting on customer 48h">Waiting on customer 48h</option>
+                                    <option value="waiting on third party">Waiting on third party</option>
+                                    <option value="waiting on internal">Waiting on internal</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Priority</label>
+                                <select id="form-fc-priority" class="form-control">
+                                    <option value="low" selected>Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="urgent">Urgent</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Group</label>
+                                <input type="text" class="form-control" value="Social Media" disabled style="background:var(--bg-sidebar);color:var(--text-muted);">
+                            </div>
+                            <div class="form-group">
+                                <label>Agent</label>
+                                <input type="text" id="form-fc-agent" class="form-control" placeholder="Agent Name">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>RT Level 1</label>
+                            <input type="text" class="form-control" value="Social" disabled style="background:var(--bg-sidebar);color:var(--text-muted);">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Description *</label>
+                            <div class="modern-rte">
+                                <div id="form-fc-desc" class="rte-content" contenteditable="true" placeholder="Type description here..."></div>
+                                
+                                <div class="rte-toolbar-middle">
+                                    <button type="button" onclick="formatDoc('bold')" title="Bold">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>
+                                    </button>
+                                    <button type="button" onclick="formatDoc('italic')" title="Italic">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>
+                                    </button>
+                                    <div class="rte-divider"></div>
+                                    <button type="button" onclick="formatDoc('insertUnorderedList')" title="Bullet List">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                                    </button>
+                                    <button type="button" onclick="formatDoc('insertOrderedList')" title="Numbered List">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
+                                    </button>
+                                    <div class="rte-divider"></div>
+                                    <button type="button" onclick="addLink()" title="Insert Link">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                    </button>
+                                    <button type="button" onclick="addImage()" title="Insert Image">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="rte-utility-bottom">
+                                    <button type="button" title="Attachments">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                    </button>
+                                    <button type="button" title="Settings">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="panel-footer">
                     <button class="btn" id="btn-cancel">Cancel</button>
@@ -1175,10 +1342,93 @@
 
         // --- DATA STATE ---
         const state = {
-            agents: ["Lina Hashem", "Job James", "Ariath Piol"],
-            relatedTo: ["Community Management", "Support General Inquiry", "Order Support Related", "Product Support Related"],
-            actions: ["Motivated Member", "Provided support from FAQ", "Provided Support from Slack Channel", "Directed Member to contact Support", "Directed Customer to DM", "Feedback/Sugg Raised on Slack", "Provided from Kustomer Canned Response", "Provided Support from SOP/Retool/shopify/App"],
-            requestTypes: ["3PL Communications", "Accessories Cancellation", "Accessories Damaged", "Accessories Delayed", "Accessories discount promotion", "Accessories Emergent", "Accessories ETA", "Accessories Inquiry", "Accessories MFG Issue", "Accessories Missing", "Accessories Refund", "Accessories Replacement", "Accessories Return", "Accessory Tech Issue", "Account remove", "Add-On ETA", "Address Change", "Affirm Inquiry", "Apparel Store Discount", "Bestbuy", "Buy Items", "Buyout", "Churn Program", "Classes Inquiry", "Cleaning Instructions", "Coach Intro Call", "Color change", "Compensation Request", "Contact info Change", "Creating Order", "Damaged Studio", "Delayed Bundle Accessories", "Delayed Bundle Accessories cancelation", "Delayed Bundle Accessories compensation", "Delayed Bundle Accessories ETA", "Delayed Bundle Accessories Inquiry", "Discount Code", "Downgrade membership", "Edit Order", "Email Address Update", "Escalation", "Exception Request", "Expedite Shipping", "Family Invite", "Family Member Profile Deletion", "FedEx Call", "Feedback", "Finance Dept.", "Fitness Coaching", "Flowspace OB", "Free core inquiry", "Free Shirt Inquiry", "Friendbuy Advocate", "Friendbuy Reward", "General Inquiry", "Gift Code", "GiftBox Promotion", "Giveaway Order", "Gympass", "Holding Delivery", "HOLIDAY100 price match", "HOLIDAY1000 price match", "International delivery", "Leasing Cancelation", "logistics raise", "Marketing Emails Issue", "Membership Activation", "Membership cancelation", "Membership CC update", "Membership Charge Date Change", "Membership Creation", "Membership Discount", "Membership Email Change", "Membership Free Months", "Membership Inquiry", "Membership Invoice", "Membership Pause", "Membership Refund", "Membership Single Login", "Membership Upgrade", "Membership Prepaid bundle purchase", "Mobile App", "Move Boxes", "Move Cancellation", "Move Color Change", "Move Delivery Issue", "Move Discount", "Move ETA", "Move Gift", "Move Part Replacement", "Move Received Damaged", "Move Refund", "Move Replacement", "Move Return", "Move Tech Issue", "My Plan Inquiry", "NPS", "Order Info", "Ownership Transfer", "Partnership", "Payment Method", "Product Specs", "Promotions", "Receipt Request", "Referral Program", "Refund", "Refurbished", "Replacement ETA", "Reset Password", "SBS", "Sending Invoice", "Shipping", "Social Team", "Stuck Plates", "Studio Cancellation", "Studio Delivery issue (Elite)", "Studio Delivery issue (XPO-RXO)", "Studio Delivery issue (Ryder)", "Studio Downgrade/Upgrade", "Studio ETA", "Studio Refund", "Studio Return", "Studio Swap ETA", "Studio Tech issue", "Survey Email", "Tempo One Inquiry", "Website Error", "WGS Issue", "Workout Recommendation", "Apple watch connectivity issue", "Reschedule delivery", "Compatibility", "Form feedback", "Rep counting", "Live classes", "Rental", "App support", "Add/Remove Profile", "Trot Challenge", "Change Billing Info", "Music Stations Inquiry", "Prospective", "Unresponsive", "Fitmas Challenge", "Add equipment", "Garage/outdoor", "Incomplete class", "Membership Reactivation", "Safety Guide", "Delivery ETA", "Current discounts", "Core purchase request", "Shoutout request", "Buy/sell tempo", "Accessories waitlist", "Suggestion", "Strava", "New Year's Challenge", "Delayed order", "GPU Fluttering", "Apparel store exchange", "Tempo Updates", "Heart HIITERs Challenge", "Spring challenge", "Encore Classes", "Feature request", "Cloud trainer feature", "Military Discount", "Outdoor studio storage", "Beta Testing", "Range of motion", "5k running Challenge", "Apparel inquiry", "Can't Locate a Program", "Bench address technical issue", "Chat with your coach", "Connection Issues", "Network Issues Buffering", "Can't Locate a Class", "Airpods Connectivity", "Live Classes Issues", "Weight Recommendation", "Unit pickup", "Advertisements", "Folding Bench Inquiry", "Weekly Strength Set Goals", "HRM inquiry", "Squat Rack Setup", "Weight Detection", "Apple Health Sync", "Stream Classes using the App", "Injury advice", "Audio cue", "Accessories order", "Network Issues", "Classes filtration", "Tempo Athletes Inquiry", "Squat Rack Issues", "Apple Watch Connectivity", "Macbook Compatibility", "Group community-related", "Untracked exercises", "Audio Cues feature", "Workout Mat Washable", "HDMI cable", "Studio Delivery Issue", "Workout Preferences", "Paused Classes/Feedback", "Freezing Update", "Mobile App Issue", "Programs Inquiry", "Tempo Move Connectivity", "Accessories Issue", "Tempo new experience", "Music issue", "Fitness Inquiry", "HRM Issues", "Summer challenge", "Workout History", "Reps Info", "WIFI External Adaptor", "Adjusting Weight Manually", "Streaks Inquiry", "Airplay Screen Mirroring", "Moving Tempo Studio", "Leaderboard Ranking Issues", "Weight entry issue", "Android complaint", "Join multiple program", "Strava integration with Tempo app", "Fitbit integration", "Challenges feedback", "Completed program Tab", "Reformer Pilates", "Adding classes to favorites", "Apple Watch complication", "Upgrade bundles of equipment", "Personalized Workout Creator Feature Request", "Tempo Trainer", "Calendar issue", "Live class notification issue", "Training plan inquiry", "Weight Calibration Classes", "Progress Hub", "Live Guided Programs", "Schedule classes", "Equipment inquiry", "Bluetooth Inquiry", "Dynamic rest", "Studio inquiry", "Website quiz", "Training plan issue", "Classes tab Redesign", "Mirror mode", "Email issue", "Body scan Comparison feature", "Downloadable workout", "Summer Sculpt Challenge", "Calendar selection", "Remove Profiles", "Leaderboard Ranking inquiry", "Tempo challenges", "Challenge Badges", "Tempo Move inquiry", "Android Body Scan", "Challenge pins", "Mirror mode Studio", "Mirror mode Move", "Leaderboard Groups", "Core Bundle Inquiry", "Challenge Completion email", "Reps in Reverse", "Reps overcounting", "Unsupported old apple watches", "End of Summer challenge", "Fit For Fall Challenge", "Welcome Kit", "Unable to log in", "Community feature", "Readiness score", "FSA/HSA", "Numbers discrepancy", "Flex program issue", "iPhone 16e incompatible", "Tempo ambassador program", "Post approval", "Studio availability", "Android compatibility/support", "Workout records issue", "Core replacement", "Renewed Tempo Move", "2025 Year Recap", "Extended dumbbells", "Body scan issue", "Delayed/lost pin", "Postage due", "Move color swap", "Lightening core availability", "Challenge end date", "iPhone 15 core inquiry"],
+            agents: [
+                "Lina Hashem", 
+                "Job James", 
+                "Ariath Piol"
+            ],
+            relatedTo: [
+                "Community Management", 
+                "Support General Inquiry", 
+                "Order Support Related", 
+                "Product Support Related"
+            ],
+            actions: [
+                "Motivated Member", 
+                "Provided support from FAQ", 
+                "Provided Support from Slack Channel", 
+                "Directed Member to contact Support", 
+                "Directed Customer to DM", 
+                "Feedback/Sugg Raised on Slack", 
+                "Provided from Kustomer Canned Response", 
+                "Provided Support from SOP/Retool/shopify/App"
+            ],
+            requestTypes: [
+                "3PL Communications", "Accessories Cancellation", "Accessories Damaged", "Accessories Delayed", 
+                "Accessories discount promotion", "Accessories Emergent", "Accessories ETA", "Accessories Inquiry", 
+                "Accessories MFG Issue", "Accessories Missing", "Accessories Refund", "Accessories Replacement", 
+                "Accessories Return", "Accessory Tech Issue", "Account remove", "Add-On ETA", "Address Change", 
+                "Affirm Inquiry", "Apparel Store Discount", "Bestbuy", "Buy Items", "Buyout", "Churn Program", 
+                "Classes Inquiry", "Cleaning Instructions", "Coach Intro Call", "Color change", "Compensation Request", 
+                "Contact info Change", "Creating Order", "Damaged Studio", "Delayed Bundle Accessories", 
+                "Delayed Bundle Accessories cancelation", "Delayed Bundle Accessories compensation", 
+                "Delayed Bundle Accessories ETA", "Delayed Bundle Accessories Inquiry", "Discount Code", 
+                "Downgrade membership", "Edit Order", "Email Address Update", "Escalation", "Exception Request", 
+                "Expedite Shipping", "Family Invite", "Family Member Profile Deletion", "FedEx Call", "Feedback", 
+                "Finance Dept.", "Fitness Coaching", "Flowspace OB", "Free core inquiry", "Free Shirt Inquiry", 
+                "Friendbuy Advocate", "Friendbuy Reward", "General Inquiry", "Gift Code", "GiftBox Promotion", 
+                "Giveaway Order", "Gympass", "Holding Delivery", "HOLIDAY100 price match", "HOLIDAY1000 price match", 
+                "International delivery", "Leasing Cancelation", "logistics raise", "Marketing Emails Issue", 
+                "Membership Activation", "Membership cancelation", "Membership CC update", "Membership Charge Date Change", 
+                "Membership Creation", "Membership Discount", "Membership Email Change", "Membership Free Months", 
+                "Membership Inquiry", "Membership Invoice", "Membership Pause", "Membership Refund", 
+                "Membership Single Login", "Membership Upgrade", "Membership Prepaid bundle purchase", "Mobile App", 
+                "Move Boxes", "Move Cancellation", "Move Color Change", "Move Delivery Issue", "Move Discount", 
+                "Move ETA", "Move Gift", "Move Part Replacement", "Move Received Damaged", "Move Refund", 
+                "Move Replacement", "Move Return", "Move Tech Issue", "My Plan Inquiry", "NPS", "Order Info", 
+                "Ownership Transfer", "Partnership", "Payment Method", "Product Specs", "Promotions", "Receipt Request", 
+                "Referral Program", "Refund", "Refurbished", "Replacement ETA", "Reset Password", "SBS", 
+                "Sending Invoice", "Shipping", "Social Team", "Stuck Plates", "Studio Cancellation", 
+                "Studio Delivery issue (Elite)", "Studio Delivery issue (XPO-RXO)", "Studio Delivery issue (Ryder)", 
+                "Studio Downgrade/Upgrade", "Studio ETA", "Studio Refund", "Studio Return", "Studio Swap ETA", 
+                "Studio Tech issue", "Survey Email", "Tempo One Inquiry", "Website Error", "WGS Issue", 
+                "Workout Recommendation", "Apple watch connectivity issue", "Reschedule delivery", "Compatibility", 
+                "Form feedback", "Rep counting", "Live classes", "Rental", "App support", "Add/Remove Profile", 
+                "Trot Challenge", "Change Billing Info", "Music Stations Inquiry", "Prospective", "Unresponsive", 
+                "Fitmas Challenge", "Add equipment", "Garage/outdoor", "Incomplete class", "Membership Reactivation", 
+                "Safety Guide", "Delivery ETA", "Current discounts", "Core purchase request", "Shoutout request", 
+                "Buy/sell tempo", "Accessories waitlist", "Suggestion", "Strava", "New Year's Challenge", "Delayed order", 
+                "GPU Fluttering", "Apparel store exchange", "Tempo Updates", "Heart HIITERs Challenge", "Spring challenge", 
+                "Encore Classes", "Feature request", "Cloud trainer feature", "Military Discount", "Outdoor studio storage", 
+                "Beta Testing", "Range of motion", "5k running Challenge", "Apparel inquiry", "Can't Locate a Program", 
+                "Bench address technical issue", "Chat with your coach", "Connection Issues", "Network Issues Buffering", 
+                "Can't Locate a Class", "Airpods Connectivity", "Live Classes Issues", "Weight Recommendation", 
+                "Unit pickup", "Advertisements", "Folding Bench Inquiry", "Weekly Strength Set Goals", "HRM inquiry", 
+                "Squat Rack Setup", "Weight Detection", "Apple Health Sync", "Stream Classes using the App", "Injury advice", 
+                "Audio cue", "Accessories order", "Network Issues", "Classes filtration", "Tempo Athletes Inquiry", 
+                "Squat Rack Issues", "Apple Watch Connectivity", "Macbook Compatibility", "Group community-related", 
+                "Untracked exercises", "Audio Cues feature", "Workout Mat Washable", "HDMI cable", "Studio Delivery Issue", 
+                "Workout Preferences", "Paused Classes/Feedback", "Freezing Update", "Mobile App Issue", "Programs Inquiry", 
+                "Tempo Move Connectivity", "Accessories Issue", "Tempo new experience", "Music issue", "Fitness Inquiry", 
+                "HRM Issues", "Summer challenge", "Workout History", "Reps Info", "WIFI External Adaptor", 
+                "Adjusting Weight Manually", "Streaks Inquiry", "Airplay Screen Mirroring", "Moving Tempo Studio", 
+                "Leaderboard Ranking Issues", "Weight entry issue", "Android complaint", "Join multiple program", 
+                "Strava integration with Tempo app", "Fitbit integration", "Challenges feedback", "Completed program Tab", 
+                "Reformer Pilates", "Adding classes to favorites", "Apple Watch complication", "Upgrade bundles of equipment", 
+                "Personalized Workout Creator Feature Request", "Tempo Trainer", "Calendar issue", "Live class notification issue", 
+                "Training plan inquiry", "Weight Calibration Classes", "Progress Hub", "Live Guided Programs", "Schedule classes", 
+                "Equipment inquiry", "Bluetooth Inquiry", "Dynamic rest", "Studio inquiry", "Website quiz", "Training plan issue", 
+                "Classes tab Redesign", "Mirror mode", "Email issue", "Body scan Comparison feature", "Downloadable workout", 
+                "Summer Sculpt Challenge", "Calendar selection", "Remove Profiles", "Leaderboard Ranking inquiry", "Tempo challenges", 
+                "Challenge Badges", "Tempo Move inquiry", "Android Body Scan", "Challenge pins", "Mirror mode Studio", 
+                "Mirror mode Move", "Leaderboard Groups", "Core Bundle Inquiry", "Challenge Completion email", "Reps in Reverse", 
+                "Reps overcounting", "Unsupported old apple watches", "End of Summer challenge", "Fit For Fall Challenge", 
+                "Welcome Kit", "Unable to log in", "Community feature", "Readiness score", "FSA/HSA", "Numbers discrepancy", 
+                "Flex program issue", "iPhone 16e incompatible", "Tempo ambassador program", "Post approval", "Studio availability", 
+                "Android compatibility/support", "Workout records issue", "Core replacement", "Renewed Tempo Move", "2025 Year Recap", 
+                "Extended dumbbells", "Body scan issue", "Delayed/lost pin", "Postage due", "Move color swap", "Lightening core availability", 
+                "Challenge end date", "iPhone 15 core inquiry"
+            ],
             statuses: ["Closed", "Pending internal action", "Pending member action"],
             interactionTypes: ["DM", "Page comments", "Group comments", "Instagram Comments", "Instagram DM"],
             cases: { fbig: [], reddit: [], review: [] },
@@ -1239,6 +1489,20 @@
             if (lower.includes("motivated")) return "Motivated Member";
             return "OTHER";
         }
+
+        // --- RICH TEXT EDITOR HANDLERS ---
+        window.formatDoc = function(cmd, value=null) {
+            document.execCommand(cmd, false, value);
+            document.getElementById('form-fc-desc').focus();
+        };
+        window.addLink = function() {
+            const url = prompt('Insert link URL (e.g., https://example.com):');
+            if(url) document.execCommand('createLink', false, url);
+        };
+        window.addImage = function() {
+            const url = prompt('Insert Image URL:');
+            if(url) document.execCommand('insertImage', false, url);
+        };
 
         // --- RELATIONAL SUPABASE SYNC UTILS ---
         window.saveSettingsToSupabase = async function() {
@@ -1445,6 +1709,11 @@
                                 req: c.req,
                                 status: c.status,
                                 qa: c.qa || false,
+                                fc_contact: c.fc_contact,
+                                fc_subject: c.fc_subject,
+                                fc_status: c.fc_status,
+                                fc_priority: c.fc_priority,
+                                fc_desc: c.fc_desc,
                                 links: {
                                     fc: c.link_fc,
                                     post: c.link_post,
@@ -1757,6 +2026,20 @@
             document.getElementById('form-link-fc').value = caseData.links.fc || '';
             document.getElementById('form-link-post').value = caseData.links.post || '';
             document.getElementById('form-link-ref').value = caseData.links.ref || '';
+            
+            // Populate new freshchat integration fields if editing
+            const fcContact = document.getElementById('form-fc-contact');
+            if (fcContact) fcContact.value = caseData.fc_contact || '';
+            const fcSubject = document.getElementById('form-fc-subject');
+            if (fcSubject) fcSubject.value = caseData.fc_subject || '';
+            const fcStatus = document.getElementById('form-fc-status');
+            if (fcStatus && caseData.fc_status) fcStatus.value = caseData.fc_status;
+            const fcPriority = document.getElementById('form-fc-priority');
+            if (fcPriority) fcPriority.value = caseData.fc_priority || 'low';
+            const fcAgent = document.getElementById('form-fc-agent');
+            if (fcAgent) fcAgent.value = caseData.agent || ''; // Pre-fill with agent from main form if not set
+            const fcDesc = document.getElementById('form-fc-desc');
+            if (fcDesc) fcDesc.innerHTML = caseData.fc_desc || '';
         };
 
         // --- TABLE RENDERING & FILTERING (DRY IMPLEMENTATION) ---
@@ -1989,6 +2272,14 @@
                 document.getElementById('form-link-post').value = '';
                 document.getElementById('form-link-ref').value = '';
                 
+                // Clear freshchat visual inputs
+                document.getElementById('form-fc-contact').value = '';
+                document.getElementById('form-fc-subject').value = '';
+                document.getElementById('form-fc-status').selectedIndex = 0;
+                document.getElementById('form-fc-priority').value = 'low';
+                document.getElementById('form-fc-agent').value = '';
+                document.getElementById('form-fc-desc').innerHTML = '';
+
                 document.querySelectorAll('#form-status .status-btn').forEach(b => b.classList.remove('selected'));
                 const defaultStatus = document.querySelector('#form-status .status-btn[data-value="Closed"]') || document.querySelector('#form-status .status-btn');
                 if(defaultStatus) defaultStatus.classList.add('selected');
@@ -2234,6 +2525,11 @@
                     type: type,
                     req: req,
                     qa: false,
+                    fc_contact: null,
+                    fc_subject: null,
+                    fc_status: null,
+                    fc_priority: null,
+                    fc_desc: null,
                     links: { ref: refLink, post: postLink, fc: fcLink }
                 };
                 
@@ -2261,6 +2557,11 @@
                     req: entry.req,
                     status: entry.status,
                     qa: entry.qa,
+                    fc_contact: null,
+                    fc_subject: null,
+                    fc_status: null,
+                    fc_priority: null,
+                    fc_desc: null,
                     link_fc: entry.links.fc || null,
                     link_post: entry.links.post || null,
                     link_ref: entry.links.ref || null
@@ -2315,6 +2616,11 @@
                 related: document.getElementById('form-related').value || '-',
                 status: state.newEntryStatus,
                 qa: state.editingId ? (state.cases[state.editingKey].find(c => c.id == state.editingId)?.qa || false) : false,
+                fc_contact: document.getElementById('form-fc-contact') ? document.getElementById('form-fc-contact').value : null,
+                fc_subject: document.getElementById('form-fc-subject') ? document.getElementById('form-fc-subject').value : null,
+                fc_status: document.getElementById('form-fc-status') ? document.getElementById('form-fc-status').value : null,
+                fc_priority: document.getElementById('form-fc-priority') ? document.getElementById('form-fc-priority').value : null,
+                fc_desc: document.getElementById('form-fc-desc') ? document.getElementById('form-fc-desc').innerHTML : null,
                 links: {
                     fc: document.getElementById('form-link-fc').value,
                     post: document.getElementById('form-link-post').value,
@@ -2340,6 +2646,11 @@
                 req: entry.req,
                 status: entry.status,
                 qa: entry.qa,
+                fc_contact: entry.fc_contact || null,
+                fc_subject: entry.fc_subject || null,
+                fc_status: entry.fc_status || null,
+                fc_priority: entry.fc_priority || null,
+                fc_desc: entry.fc_desc || null,
                 link_fc: entry.links.fc || null,
                 link_post: entry.links.post || null,
                 link_ref: entry.links.ref || null
@@ -2363,7 +2674,7 @@
                 closePanel();
             } catch (e) {
                 console.error("Save case error:", e);
-                // The panel will stay open, indicating the save failed visually to the user.
+                alert("Failed to save entry. Make sure the fc_contact, fc_subject, fc_status, fc_priority, and fc_desc columns exist in Supabase as text!");
             }
         });
 
@@ -3134,7 +3445,7 @@
                 data = getFilteredCases('pending', true).map(c => [
                     formatDate(c.date), c._sourceName, c.agent, c.related || '-', c.type || '-', c.req, c.action, c.status, c.links.fc || '', c.links.post || '', c.links.ref || '', c.qa ? 'Yes' : 'No'
                 ]);
-            } else if (activePage === 'page-weekly') {
+            } else if (activePage === 'page-weekly' || activePage === 'page-monthly') {
                 let csvStr = '';
                 const tables = container.querySelectorAll('.da-table');
                 if(tables.length === 0) return alert('No data to export here.');
@@ -3150,7 +3461,7 @@
                     csvStr += '\n';
                 });
                 
-                filename = 'weekly_review.csv';
+                filename = activePage === 'page-weekly' ? 'weekly_review.csv' : 'monthly_review.csv';
                 
                 const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
